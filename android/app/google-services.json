@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "532025211449",
+    "firebase_url": "https://greenpulse-daklak-default-rtdb.firebaseio.com",
+    "project_id": "greenpulse-daklak",
+    "storage_bucket": "greenpulse-daklak.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:532025211449:android:1583822d9b217e658b6be8",
+        "android_client_info": {
+          "package_name": "com.example.greenpulse"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDB0-XqDXO-g9unbe6zYPJEJ80l76YrLLU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
