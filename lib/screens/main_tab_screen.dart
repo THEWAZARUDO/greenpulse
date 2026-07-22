@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/farm_model.dart';
@@ -25,7 +26,10 @@ class _MainTabScreenState extends State<MainTabScreen> {
   final RTDBService _rtdbService = RTDBService();
   final NotificationService _notificationService = NotificationService();
 
-  final List<Widget> _tabs = const [
+  StreamSubscription? _farmsSub;
+  final Map<String, StreamSubscription> _sensorSubs = {};
+
+  static const List<Widget> _tabs = [
     DashboardTab(),
     FarmsTab(),
     AlertsTab(),
@@ -33,58 +37,69 @@ class _MainTabScreenState extends State<MainTabScreen> {
   ];
 
   @override
-  Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
+  void initState() {
+    super.initState();
+    _listenToAlerts();
+  }
 
+  void _listenToAlerts() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    _farmsSub = _firestoreService.watchFarms(user.uid).listen((farms) {
+      final currentFarmIds = farms.map((f) => f.id).toSet();
+      _sensorSubs.removeWhere((id, sub) {
+        if (!currentFarmIds.contains(id)) {
+          sub.cancel();
+          return true;
+        }
+        return false;
+      });
+
+      for (var farm in farms) {
+        if (!_sensorSubs.containsKey(farm.id)) {
+          _sensorSubs[farm.id] = _rtdbService
+              .watchSensors(user.uid, farm.id)
+              .listen((sensors) {
+            bool hasAlert = false;
+            String? alertMsg;
+
+            for (var sensor in sensors) {
+              if (sensor.overallStatus != StatusLevel.normal) {
+                hasAlert = true;
+                alertMsg =
+                    '${farm.name} - Cảm biến ${sensor.id}: ${sensor.overallStatus.label}!';
+                _notificationService.processSensorAlerts(farm.name, sensor);
+              }
+            }
+
+            if (mounted &&
+                (_isRedAlertMode != hasAlert || _redAlertMessage != alertMsg)) {
+              setState(() {
+                _isRedAlertMode = hasAlert;
+                _redAlertMessage = alertMsg;
+              });
+            }
+          });
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _farmsSub?.cancel();
+    for (var sub in _sensorSubs.values) {
+      sub.cancel();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
         children: [
-          // ── Stream Listener phát hiện Cảnh báo & Đổi Chế độ Màu Đỏ ─────────────
-          if (user != null)
-            StreamBuilder<List<FarmModel>>(
-              stream: _firestoreService.watchFarms(user.uid),
-              builder: (context, farmSnap) {
-                final farms = farmSnap.data ?? [];
-                if (farms.isEmpty) return const SizedBox.shrink();
-
-                return Column(
-                  children: farms.map((farm) {
-                    return StreamBuilder<List<SensorData>>(
-                      stream: _rtdbService.watchSensors(user.uid, farm.id),
-                      builder: (context, sensorSnap) {
-                        final sensors = sensorSnap.data ?? [];
-                        bool hasAlert = false;
-                        String? alertMsg;
-
-                        for (var sensor in sensors) {
-                          if (sensor.overallStatus != StatusLevel.normal) {
-                            hasAlert = true;
-                            alertMsg =
-                                '${farm.name} - Cảm biến ${sensor.id}: ${sensor.overallStatus.label}!';
-                            // Xử lý thông báo đẩy 1 phút / 1 lần lên điện thoại
-                            _notificationService.processSensorAlerts(
-                                farm.name, sensor);
-                          }
-                        }
-
-                        // Cập nhật chế độ Màu Đỏ Khẩn Cấp
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (mounted && (_isRedAlertMode != hasAlert || _redAlertMessage != alertMsg)) {
-                            setState(() {
-                              _isRedAlertMode = hasAlert;
-                              _redAlertMessage = alertMsg;
-                            });
-                          }
-                        });
-
-                        return const SizedBox.shrink();
-                      },
-                    );
-                  }).toList(),
-                );
-              },
-            ),
-
           // ── Top Red Alert Banner ───────────────────────────────────────────
           if (_isRedAlertMode)
             Container(
@@ -188,9 +203,9 @@ class _MainTabScreenState extends State<MainTabScreen> {
           height: 68,
           backgroundColor: Colors.white,
           indicatorColor: _isRedAlertMode
-              ? const Color(0xFFFFCDD2) // Màu đỏ nhạt khi Red Alert
-              : const Color(0xFFC8E6C9), // Màu xanh nõn chuối bình thường
-          animationDuration: const Duration(milliseconds: 400),
+              ? const Color(0xFFFFCDD2)
+              : const Color(0xFFC8E6C9),
+          animationDuration: const Duration(milliseconds: 300),
           destinations: [
             NavigationDestination(
               icon: const Icon(Icons.dashboard_outlined, size: 22),

@@ -138,16 +138,6 @@ class DashboardTab extends StatelessWidget {
                             ),
                           ],
                         ),
-/*                        const SizedBox(height: 14),
-                        // Sub-title bar
-                        Text(
-                          'GreenPulse AI Dashboard',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.6),
-                            fontSize: 11.5,
-                            letterSpacing: 0.8,
-                          ),
-                        ),*/ //Text
                       ],
                     ),
                   ),
