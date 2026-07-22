@@ -64,6 +64,27 @@ class AuthService {
   // ─── Đăng xuất ────────────────────────────────────────────────────────────
   Future<void> signOut() => _auth.signOut();
 
+  // ─── Quên Mật Khẩu ───────────────────────────────────────────────────────
+  Future<void> sendPasswordResetEmail({required String email}) async {
+    await _auth.sendPasswordResetEmail(email: email.trim());
+  }
+
+  // ─── Xác Thực Email ───────────────────────────────────────────────────────
+  Future<void> sendEmailVerification() async {
+    final user = _auth.currentUser;
+    if (user != null && !user.emailVerified) {
+      await user.sendEmailVerification();
+    }
+  }
+
+  /// Reload lại thông tin user từ Firebase Auth (cập nhật trạng thái emailVerified)
+  Future<void> reloadUser() async {
+    await _auth.currentUser?.reload();
+  }
+
+  /// Kiểm tra email đã được xác minh chưa
+  bool get isEmailVerified => _auth.currentUser?.emailVerified ?? false;
+
   // ─── Helper ───────────────────────────────────────────────────────────────
   Future<UserModel> _fetchUserModel(String uid) async {
     final doc = await _db.collection('users').doc(uid).get();

@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_tab_screen.dart';
+import 'screens/verify_email_screen.dart';
 
 import 'services/notification_service.dart';
 
@@ -118,7 +119,12 @@ class AuthGate extends StatelessWidget {
           );
         }
         if (snapshot.hasData) {
-          return const MainTabScreen();
+          final user = snapshot.data!;
+          if (user.emailVerified) {
+            return const MainTabScreen();
+          } else {
+            return const VerifyEmailScreen();
+          }
         }
         return const LoginScreen();
       },

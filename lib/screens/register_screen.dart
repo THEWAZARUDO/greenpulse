@@ -37,12 +37,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
         password: _passwordCtrl.text,
         username: _usernameCtrl.text,
       );
-      // authStateChanges sẽ tự routing về màn hình chính
+      try {
+        await _authService.sendEmailVerification();
+      } catch (_) {}
+
+      // authStateChanges và AuthGate sẽ chuyển sang VerifyEmailScreen
       if (mounted) {
-        Navigator.of(context).pop(); // Đóng màn hình đăng ký để về màn hình chính
+        Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Đăng ký thành công!'),
+            content: Text('Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.'),
             backgroundColor: Color(0xFF2E7D32),
           ),
         );
