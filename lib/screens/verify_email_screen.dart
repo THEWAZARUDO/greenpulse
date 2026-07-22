@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import 'main_tab_screen.dart';
 
 /// Màn hình chờ xác thực Email
 class VerifyEmailScreen extends StatefulWidget {
@@ -13,7 +14,6 @@ class VerifyEmailScreen extends StatefulWidget {
 
 class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
   final _authService = AuthService();
-  bool _isEmailVerified = false;
   bool _canResendEmail = true;
   bool _loadingCheck = false;
   int _resendCountdown = 0;
@@ -25,13 +25,14 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
   void initState() {
     super.initState();
 
-    _isEmailVerified = FirebaseAuth.instance.currentUser?.emailVerified ?? false;
-
-    if (!_isEmailVerified) {
-      // Tự động gửi email xác thực nếu chưa từng gửi hoặc muốn nhắc người dùng
-      _sendVerificationEmailSilently();
-
-      // Tự động kiểm tra trạng thái mỗi 3 giây
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null && user.emailVerified) {
+      // Nếu đã xác thực trước đó, chuyển ngay đến Dashboard
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _navigateToDashboard();
+      });
+    } else {
+      // Tự động kiểm tra trạng thái mỗi 3 giây bằng cách reload user
       _timer = Timer.periodic(const Duration(seconds: 3), (_) => _checkEmailVerified());
     }
   }
@@ -43,29 +44,34 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     super.dispose();
   }
 
-  Future<void> _sendVerificationEmailSilently() async {
-    try {
-      await _authService.sendEmailVerification();
-    } catch (_) {}
+  void _navigateToDashboard() {
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const MainTabScreen()),
+      (route) => false,
+    );
   }
 
   Future<void> _checkEmailVerified() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
     try {
-      await _authService.reloadUser();
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null && user.emailVerified) {
+      await user.reload();
+      final reloadedUser = FirebaseAuth.instance.currentUser;
+
+      if (reloadedUser != null && reloadedUser.emailVerified) {
         _timer?.cancel();
-        if (mounted) {
-          setState(() {
-            _isEmailVerified = true;
-          });
-        }
+        _navigateToDashboard();
       }
     } catch (_) {}
   }
 
   Future<void> _resendVerificationEmail() async {
     if (!_canResendEmail) return;
+
+    // Bắt đầu đếm ngược 60s lập tức để ngăn bấm liên tục
+    _startCountdown();
 
     try {
       await _authService.sendEmailVerification();
@@ -77,40 +83,54 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
           backgroundColor: Color(0xFF1B5E20),
         ),
       );
-
-      setState(() {
-        _canResendEmail = false;
-        _resendCountdown = 60;
-      });
-
-      _countdownTimer?.cancel();
-      _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        if (_resendCountdown == 1) {
-          timer.cancel();
-          if (mounted) {
-            setState(() {
-              _canResendEmail = true;
-              _resendCountdown = 0;
-            });
-          }
-        } else {
-          if (mounted) {
-            setState(() {
-              _resendCountdown--;
-            });
-          }
-        }
-      });
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
       String msg = 'Không thể gửi lại email. Vui lòng thử lại sau.';
       if (e.code == 'too-many-requests') {
-        msg = 'Bạn đã yêu cầu quá nhiều lần. Vui lòng đợi một phút rồi thử lại.';
+        msg = 'Link xác thực đã được gửi gần đây. Vui lòng kiểm tra hòm thư (kể cả mục Spam) hoặc đợi 60s rồi gửi lại.';
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(msg), backgroundColor: Colors.red.shade700),
+        SnackBar(
+          content: Text(msg),
+          backgroundColor: Colors.orange.shade800,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Đã xảy ra lỗi. Vui lòng thử lại sau.'),
+          backgroundColor: Colors.red.shade700,
+        ),
       );
     }
+  }
+
+  void _startCountdown() {
+    setState(() {
+      _canResendEmail = false;
+      _resendCountdown = 60;
+    });
+
+    _countdownTimer?.cancel();
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_resendCountdown <= 1) {
+        timer.cancel();
+        if (mounted) {
+          setState(() {
+            _canResendEmail = true;
+            _resendCountdown = 0;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _resendCountdown--;
+          });
+        }
+      }
+    });
   }
 
   Future<void> _manualCheck() async {
@@ -118,10 +138,11 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     await _checkEmailVerified();
     if (mounted) {
       setState(() => _loadingCheck = false);
-      if (!_isEmailVerified) {
+      final isVerified = FirebaseAuth.instance.currentUser?.emailVerified ?? false;
+      if (!isVerified) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Tài khoản chưa được xác thực. Hãy nhấn vào link trong email của bạn.'),
+            content: Text('Chưa ghi nhận xác thực. Vui lòng bấm vào liên kết trong email trước.'),
             backgroundColor: Colors.orange,
           ),
         );
@@ -238,7 +259,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                             SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                'Đang tự động chờ xác thực...',
+                                'Tự động kiểm tra sau mỗi 3 giây...',
                                 style: TextStyle(fontSize: 12.5, color: Color(0xFF2E7D32), fontWeight: FontWeight.w500),
                               ),
                             ),
@@ -261,7 +282,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                                 )
                               : const Icon(Icons.refresh, size: 20),
                           label: const Text(
-                            'Tôi đã xác thực / Kiểm tra lại',
+                            'Tôi đã bấm link xác thực / Kiểm tra ngay',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           style: ElevatedButton.styleFrom(
