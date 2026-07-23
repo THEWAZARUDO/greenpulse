@@ -33,7 +33,10 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
       });
     } else {
       // Tự động kiểm tra trạng thái mỗi 3 giây bằng cách reload user
-      _timer = Timer.periodic(const Duration(seconds: 3), (_) => _checkEmailVerified());
+      _timer = Timer.periodic(
+        const Duration(seconds: 3),
+        (_) => _checkEmailVerified(),
+      );
     }
   }
 
@@ -79,7 +82,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Đã gửi lại link xác thực! Vui lòng kiểm tra hộp thư của bạn.'),
+          content: Text(
+            'Đã gửi lại link xác thực! Vui lòng kiểm tra hộp thư của bạn.',
+          ),
           backgroundColor: Color(0xFF1B5E20),
         ),
       );
@@ -87,7 +92,8 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
       if (!mounted) return;
       String msg = 'Không thể gửi lại email. Vui lòng thử lại sau.';
       if (e.code == 'too-many-requests') {
-        msg = 'Link xác thực đã được gửi gần đây. Vui lòng kiểm tra hòm thư (kể cả mục Spam) hoặc đợi 60s rồi gửi lại.';
+        msg =
+            'Link xác thực đã được gửi gần đây. Vui lòng kiểm tra hòm thư (kể cả mục Spam) hoặc đợi 60s rồi gửi lại.';
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -138,11 +144,14 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     await _checkEmailVerified();
     if (mounted) {
       setState(() => _loadingCheck = false);
-      final isVerified = FirebaseAuth.instance.currentUser?.emailVerified ?? false;
+      final isVerified =
+          FirebaseAuth.instance.currentUser?.emailVerified ?? false;
       if (!isVerified) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Chưa ghi nhận xác thực. Vui lòng bấm vào liên kết trong email trước.'),
+            content: Text(
+              'Chưa ghi nhận xác thực. Vui lòng bấm vào liên kết trong email trước.',
+            ),
             backgroundColor: Colors.orange,
           ),
         );
@@ -162,7 +171,11 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF1A3C34), Color(0xFF1B5E20), Color(0xFF2E7D32)],
+                colors: [
+                  Color(0xFF1A3C34),
+                  Color(0xFF1B5E20),
+                  Color(0xFF2E7D32),
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -171,7 +184,10 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 32,
+                ),
                 child: Container(
                   padding: const EdgeInsets.all(28),
                   decoration: BoxDecoration(
@@ -194,7 +210,10 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                         decoration: BoxDecoration(
                           color: const Color(0xFFE8F5E9),
                           shape: BoxShape.circle,
-                          border: Border.all(color: const Color(0xFFA5D6A7), width: 2),
+                          border: Border.all(
+                            color: const Color(0xFFA5D6A7),
+                            width: 2,
+                          ),
                         ),
                         child: const Icon(
                           Icons.mark_email_unread_outlined,
@@ -220,9 +239,16 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                       RichText(
                         textAlign: TextAlign.center,
                         text: TextSpan(
-                          style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.5),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.black87,
+                            height: 1.5,
+                          ),
                           children: [
-                            const TextSpan(text: 'Chúng tôi đã gửi một liên kết xác thực đến địa chỉ:\n'),
+                            const TextSpan(
+                              text:
+                                  'Chúng tôi đã gửi một liên kết xác thực đến địa chỉ:\n',
+                            ),
                             TextSpan(
                               text: email,
                               style: const TextStyle(
@@ -231,7 +257,8 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                               ),
                             ),
                             const TextSpan(
-                              text: '\n\nVui lòng kiểm tra hộp thư (bao gồm cả thư rác/Spam) và nhấn vào liên kết để kích hoạt tài khoản.',
+                              text:
+                                  '\n\nVui lòng kiểm tra hộp thư (bao gồm cả thư rác/Spam) và nhấn vào liên kết để kích hoạt tài khoản.',
                             ),
                           ],
                         ),
@@ -240,7 +267,10 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
 
                       // Progress indicator / Pulse info
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF1F8E9),
                           borderRadius: BorderRadius.circular(14),
@@ -260,7 +290,11 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                             Expanded(
                               child: Text(
                                 'Tự động kiểm tra sau mỗi 3 giây...',
-                                style: TextStyle(fontSize: 12.5, color: Color(0xFF2E7D32), fontWeight: FontWeight.w500),
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  color: Color(0xFF2E7D32),
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ),
                           ],
@@ -278,7 +312,10 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                               ? const SizedBox(
                                   width: 18,
                                   height: 18,
-                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
                                 )
                               : const Icon(Icons.refresh, size: 20),
                           label: const Text(
@@ -288,7 +325,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF2E7D32),
                             foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                           ),
                         ),
                       ),
@@ -299,7 +338,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                         width: double.infinity,
                         height: 48,
                         child: OutlinedButton.icon(
-                          onPressed: _canResendEmail ? _resendVerificationEmail : null,
+                          onPressed: _canResendEmail
+                              ? _resendVerificationEmail
+                              : null,
                           icon: const Icon(Icons.send_outlined, size: 18),
                           label: Text(
                             _canResendEmail
@@ -310,7 +351,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                           style: OutlinedButton.styleFrom(
                             foregroundColor: const Color(0xFF2E7D32),
                             side: const BorderSide(color: Color(0xFF81C784)),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                           ),
                         ),
                       ),
@@ -319,7 +362,11 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                       // Button 3: Đăng xuất
                       TextButton.icon(
                         onPressed: () => _authService.signOut(),
-                        icon: const Icon(Icons.logout, size: 18, color: Colors.grey),
+                        icon: const Icon(
+                          Icons.logout,
+                          size: 18,
+                          color: Colors.grey,
+                        ),
                         label: const Text(
                           'Đăng xuất / Dùng tài khoản khác',
                           style: TextStyle(color: Colors.grey, fontSize: 13),

@@ -26,11 +26,7 @@ class UserModel {
 
   /// Chuyển về Map để ghi vào Firestore.
   Map<String, dynamic> toMap() {
-    return {
-      'username': username,
-      'gmail': gmail,
-      'ID': id,
-    };
+    return {'username': username, 'gmail': gmail, 'ID': id};
   }
 
   @override

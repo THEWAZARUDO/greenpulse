@@ -1,15 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'plant_preset_manager.dart';
 
-enum StatusLevel { normal, warning, danger }
+enum StatusLevel { normal, danger }
 
 extension StatusLevelExtension on StatusLevel {
   Color get color {
     switch (this) {
       case StatusLevel.normal:
         return const Color(0xFF2E7D32); // Green
-      case StatusLevel.warning:
-        return const Color(0xFFF57C00); // Orange
       case StatusLevel.danger:
         return const Color(0xFFD32F2F); // Red
     }
@@ -19,8 +18,6 @@ extension StatusLevelExtension on StatusLevel {
     switch (this) {
       case StatusLevel.normal:
         return 'An toàn';
-      case StatusLevel.warning:
-        return 'Cảnh báo';
       case StatusLevel.danger:
         return 'Nguy hiểm';
     }
@@ -30,11 +27,59 @@ extension StatusLevelExtension on StatusLevel {
     switch (this) {
       case StatusLevel.normal:
         return Icons.check_circle_outline;
-      case StatusLevel.warning:
-        return Icons.warning_amber_rounded;
       case StatusLevel.danger:
         return Icons.error_outline;
     }
+  }
+}
+
+// ─── MODEL CẤU HÌNH NGƯỠNG AI TÙY CHỈNH ─────────────────────────────────────
+class SensorThresholds {
+  final String plantName;
+  final double minTemp;
+  final double maxTemp;
+  final double minHumidity;
+  final double maxHumidity;
+  final double minSoil;
+  final double maxSoil;
+  final double minLight;
+  final double maxLight;
+  const SensorThresholds({
+    this.plantName = 'Mặc định',
+    this.minTemp = 15.0,
+    this.maxTemp = 35.0,
+    this.minHumidity = 40.0,
+    this.maxHumidity = 50.0,
+    this.minSoil = 30.0,
+    this.maxSoil = 50.0,
+    this.minLight = 300.0,
+    this.maxLight = 2800.0,
+  });
+  factory SensorThresholds.fromMap(Map<String, dynamic> data) {
+    return SensorThresholds(
+      plantName: (data['name'] ?? data['plantName'])?.toString() ?? 'Mặc định',
+      minTemp: (data['minTemp'] ?? 15.0).toDouble(),
+      maxTemp: (data['maxTemp'] ?? 35.0).toDouble(),
+      minHumidity: (data['minHumidity'] ?? 40.0).toDouble(),
+      maxHumidity: (data['maxHumidity'] ?? 50.0).toDouble(),
+      minSoil: (data['minSoil'] ?? 30.0).toDouble(),
+      maxSoil: (data['maxSoil'] ?? 50.0).toDouble(),
+      minLight: (data['minLight'] ?? 300.0).toDouble(),
+      maxLight: (data['maxLight'] ?? 2800.0).toDouble(),
+    );
+  }
+  Map<String, dynamic> toMap() {
+    return {
+      'plantName': plantName,
+      'minTemp': minTemp,
+      'maxTemp': maxTemp,
+      'minHumidity': minHumidity,
+      'maxHumidity': maxHumidity,
+      'minSoil': minSoil,
+      'maxSoil': maxSoil,
+      'minLight': minLight,
+      'maxLight': maxLight,
+    };
   }
 }
 
@@ -44,39 +89,54 @@ class SensorData {
   final double light;
   final double soil;
   final double temperature;
+  final SensorThresholds? customThresholds;
   final Map<String, dynamic> extra;
-
   const SensorData({
     this.id = 'sensor_1',
     required this.humidity,
     required this.light,
     required this.soil,
     required this.temperature,
+    this.customThresholds,
     this.extra = const {},
   });
-
-  factory SensorData.fromMap(Map<String, dynamic> data, {String id = 'sensor_1'}) {
-    final known = {'humidity', 'light', 'soil', 'temperature', 'id'};
+  factory SensorData.fromMap(
+    Map<String, dynamic> data, {
+    String id = 'sensor_1',
+  }) {
+    final known = {
+      'humidity',
+      'light',
+      'soil',
+      'temperature',
+      'id',
+      'plantName',
+    };
     final extra = Map<String, dynamic>.fromEntries(
       data.entries.where((e) => !known.contains(e.key)),
     );
+    SensorThresholds? customThresholds;
+    if (data['plantName'] != null) {
+      customThresholds = PlantPresetManager.getPresetByName(
+        data['plantName'].toString(),
+      );
+    }
     return SensorData(
       id: (data['id'] ?? id).toString(),
       humidity: (data['humidity'] ?? 0).toDouble(),
       light: (data['light'] ?? 0).toDouble(),
       soil: (data['soil'] ?? 0).toDouble(),
       temperature: (data['temperature'] ?? 0).toDouble(),
+      customThresholds: customThresholds,
       extra: extra,
     );
   }
-
   factory SensorData.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>? ?? {};
     return SensorData.fromMap(data, id: doc.id);
   }
-
   Map<String, dynamic> toMap() {
-    return {
+    final map = {
       'id': id,
       'humidity': humidity,
       'light': light,
@@ -84,72 +144,109 @@ class SensorData {
       'temperature': temperature,
       ...extra,
     };
+    if (customThresholds != null) {
+      map['plantName'] = customThresholds!.plantName;
+    }
+    return map;
   }
 
-  // ─── ĐÁNH GIÁ TRẠNG THÁI THEO NGƯỠNG AN TOÀN ───────────────────────────
-
   StatusLevel get tempStatus {
-    if (temperature > 35.0 || temperature < 12.0) return StatusLevel.danger;
-    if (temperature > 32.0 || temperature < 18.0) return StatusLevel.warning;
+    final t =
+        customThresholds ??
+        (PlantPresetManager.presets.isNotEmpty
+            ? PlantPresetManager.presets.first
+            : const SensorThresholds());
+    if (temperature > t.maxTemp || temperature < t.minTemp)
+      return StatusLevel.danger;
     return StatusLevel.normal;
   }
 
   StatusLevel get humidityStatus {
-    if (humidity < 30.0 || humidity > 92.0) return StatusLevel.danger;
-    if (humidity < 45.0 || humidity > 85.0) return StatusLevel.warning;
+    final t =
+        customThresholds ??
+        (PlantPresetManager.presets.isNotEmpty
+            ? PlantPresetManager.presets.first
+            : const SensorThresholds());
+    if (humidity < t.minHumidity || humidity > t.maxHumidity)
+      return StatusLevel.danger;
     return StatusLevel.normal;
   }
 
   StatusLevel get soilStatus {
-    if (soil < 20.0) return StatusLevel.danger;
-    if (soil < 35.0 || soil > 85.0) return StatusLevel.warning;
+    final t =
+        customThresholds ??
+        (PlantPresetManager.presets.isNotEmpty
+            ? PlantPresetManager.presets.first
+            : const SensorThresholds());
+    if (soil < t.minSoil || soil > t.maxSoil) return StatusLevel.danger;
     return StatusLevel.normal;
   }
 
   StatusLevel get lightStatus {
-    if (light < 100 || light > 3500) return StatusLevel.danger;
-    if (light < 250 || light > 2500) return StatusLevel.warning;
+    final t =
+        customThresholds ??
+        (PlantPresetManager.presets.isNotEmpty
+            ? PlantPresetManager.presets.first
+            : const SensorThresholds());
+    if (light < t.minLight || light > t.maxLight) return StatusLevel.danger;
     return StatusLevel.normal;
   }
 
   StatusLevel get overallStatus {
     final statuses = [tempStatus, humidityStatus, soilStatus, lightStatus];
     if (statuses.contains(StatusLevel.danger)) return StatusLevel.danger;
-    if (statuses.contains(StatusLevel.warning)) return StatusLevel.warning;
     return StatusLevel.normal;
   }
 
   // ─── AI ADVICE SYSTEM (LỜI KHUYÊN TỰ ĐỘNG TỪ HỆ THỐNG AI) ──────────────────
-
   List<String> getAiAdviceList() {
+    final thresholds =
+        customThresholds ??
+        (PlantPresetManager.presets.isNotEmpty
+            ? PlantPresetManager.presets.first
+            : const SensorThresholds());
     final List<String> advice = [];
-
-    if (temperature > 35.0) {
-      advice.add('🔥 Nhiệt độ quá cao ($temperature°C). AI khuyến nghị kích hoạt hệ thống phun sương làm mát.');
-    } else if (temperature < 15.0) {
-      advice.add('❄️ Nhiệt độ quá thấp ($temperature°C). Bật đèn sưởi hoặc đóng rèm chắn gió.');
+    if (temperature > thresholds.maxTemp) {
+      advice.add(
+        'Nhiệt độ ($temperature°C) đang quá cao. Khuyến nghị kích hoạt phun sương làm mát.',
+      );
+    } else if (temperature < thresholds.minTemp) {
+      advice.add(
+        'Nhiệt độ ($temperature°C) đang quá thấp. Bật đèn sưởi hoặc đóng rèm chắn gió.',
+      );
     }
-
-    if (soil < 30.0) {
-      advice.add('💧 Độ ẩm đất thấp ($soil%). AI khuyến nghị bật máy bơm tưới tự động trong 10 phút.');
+    if (soil < thresholds.minSoil) {
+      advice.add(
+        'Độ ẩm đất ($soil%) đang quá thấp. Khuyến nghị bật máy bơm tưới tự động.',
+      );
     } else if (soil > 85.0) {
-      advice.add('🌊 Đất quá ngập nước ($soil%). Tạm ngưng hệ thống tưới và kiểm tra mương thoát nước.');
+      advice.add(
+        'Đất ngập nước. Tạm ngưng hệ thống tưới và kiểm tra mương thoát nước.',
+      );
     }
-
-    if (humidity < 40.0) {
-      advice.add('🌵 Độ ẩm không khí khô ($humidity%). Tăng cường độ ẩm không khí để lá không bị héo.');
+    if (humidity < thresholds.minHumidity) {
+      advice.add(
+        'Độ ẩm không khí ($humidity%) quá khô. Tăng cường độ ẩm không khí.',
+      );
+    } else if (humidity > thresholds.maxHumidity) {
+      advice.add(
+        'Độ ẩm không khí ($humidity%) quá ẩm. Vui lòng thoát ẩm cho cây.',
+      );
     }
-
-    if (light < 250) {
-      advice.add('☀️ Thiếu ánh sáng ($light lux). Bật hệ thống đèn LED quang hợp trợ sáng.');
-    } else if (light > 2800) {
-      advice.add('🌤️ Ánh sáng gắt ($light lux). Kéo lưới che nắng để bảo vệ mô lá.');
+    if (light < thresholds.minLight) {
+      advice.add(
+        'Thiếu ánh sáng ($light lux < ${thresholds.minLight} lux). Bật hệ thống đèn LED quang hợp.',
+      );
+    } else if (light > thresholds.maxLight) {
+      advice.add(
+        'Ánh sáng quá cao ($light lux > ${thresholds.maxLight} lux). Kéo lưới che nắng bảo vệ mô lá.',
+      );
     }
-
     if (advice.isEmpty) {
-      advice.add('🌱 Tất cả chỉ số cảm biến đạt trạng thái tối ưu cho cây trồng phát triển.');
+      advice.add(
+        'Tất cả chỉ số cảm biến đạt trạng thái tối ưu theo cấu hình ngưỡng AI.',
+      );
     }
-
     return advice;
   }
 }
@@ -157,16 +254,10 @@ class SensorData {
 class FarmModel {
   final String id;
   final String name;
-
   const FarmModel({required this.id, required this.name});
-
   factory FarmModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>? ?? {};
-    return FarmModel(
-      id: doc.id,
-      name: data['name'] as String? ?? doc.id,
-    );
+    return FarmModel(id: doc.id, name: data['name'] as String? ?? doc.id);
   }
-
   Map<String, dynamic> toMap() => {'name': name};
 }

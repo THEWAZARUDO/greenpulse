@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import '../models/farm_model.dart';
 import '../services/firestore_service.dart';
+import '../services/rtdb_service.dart';
 
 /// Màn hình cấu hình kết nối ESP32 qua WiFi AP (Cách 2).
 ///
@@ -99,7 +100,8 @@ class _ProvisionScreenState extends State<ProvisionScreen> {
       } else {
         setState(() {
           _status = _ProvisionStatus.error;
-          _statusMessage = 'ESP32 phản hồi lỗi (HTTP ${response.statusCode}):\n${response.body}';
+          _statusMessage =
+              'ESP32 phản hồi lỗi (HTTP ${response.statusCode}):\n${response.body}';
         });
       }
     } on Exception catch (e) {
@@ -117,11 +119,48 @@ class _ProvisionScreenState extends State<ProvisionScreen> {
     }
   }
 
+  Future<void> _sendMockSensorData() async {
+    if (_selectedFarm == null) {
+      _showMessage('Vui lòng chọn một Nông trại!', isError: true);
+      return;
+    }
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    final sensorId = _sensorIdCtrl.text.trim().isEmpty
+        ? 'sensor_debug'
+        : _sensorIdCtrl.text.trim();
+
+    final rtdbService = RTDBService();
+    final mockSensor = SensorData(
+      id: sensorId,
+      temperature: 28.5,
+      humidity: 65.0,
+      soil: 55.0,
+      light: 1200.0,
+    );
+
+    await rtdbService.addOrUpdateSensor(
+      uid,
+      _selectedFarm!.id,
+      sensorId,
+      mockSensor,
+    );
+
+    setState(() {
+      _status = _ProvisionStatus.success;
+      _statusMessage =
+          'Đã nạp thành công Mạch Giả Lập ($sensorId) vào Realtime Database cho nông trại "${_selectedFarm!.name}".';
+    });
+  }
+
   void _showMessage(String msg, {bool isError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      backgroundColor: isError ? Colors.red : const Color(0xFF2E7D32),
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: isError ? Colors.red : const Color(0xFF2E7D32),
+      ),
+    );
   }
 
   @override
@@ -145,7 +184,7 @@ class _ProvisionScreenState extends State<ProvisionScreen> {
                 step: 1,
                 title: 'Cắm điện cho mạch',
                 description:
-                    'Mạch sẽ phát sóng Wi-Fi tên "GreenPulse_Setup_XXXX".\nKhi đèn LED sáng nghĩa là mạch đã sẵn sàng.',
+                    'Mạch sẽ phát sóng Wi-Fi tên "GreenPulse_Setup_XXXX". Khi đèn LED sáng nghĩa là mạch đã sẵn sàng.',
                 icon: Icons.electrical_services,
               ),
               _StepCard(
@@ -159,14 +198,17 @@ class _ProvisionScreenState extends State<ProvisionScreen> {
               _StepCard(
                 step: 3,
                 title: 'Điền thông tin và gửi cấu hình',
-                description: 'Điền đầy đủ thông tin bên dưới để mạch có thể kết nối với Wi-fi của nhà bạn. Khi thực hiện xong bước này bạn có thể ngắt kết nối khỏi mạng của mạch ESP32.',
+                description:
+                    'Điền đầy đủ thông tin bên dưới để mạch có thể kết nối với Wi-fi của nhà bạn. Khi thực hiện xong bước này bạn có thể ngắt kết nối khỏi mạng của mạch ESP32.',
                 icon: Icons.send,
               ),
               const SizedBox(height: 20),
 
               // ── Form ─────────────────────────────────────────────────────
               Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
@@ -200,10 +242,12 @@ class _ProvisionScreenState extends State<ProvisionScreen> {
                               isExpanded: true,
                               isDense: true,
                               items: _farms
-                                  .map((f) => DropdownMenuItem(
-                                        value: f,
-                                        child: Text(f.name),
-                                      ))
+                                  .map(
+                                    (f) => DropdownMenuItem(
+                                      value: f,
+                                      child: Text(f.name),
+                                    ),
+                                  )
                                   .toList(),
                               onChanged: (v) {
                                 setState(() => _selectedFarm = v);
@@ -225,8 +269,9 @@ class _ProvisionScreenState extends State<ProvisionScreen> {
                           border: OutlineInputBorder(),
                           helperText: 'Mỗi mạch ESP32 cần một mã khác nhau',
                         ),
-                        validator: (v) =>
-                            v == null || v.trim().isEmpty ? 'Vui lòng nhập mã cảm biến' : null,
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? 'Vui lòng nhập mã cảm biến'
+                            : null,
                       ),
                       const SizedBox(height: 14),
 
@@ -238,10 +283,11 @@ class _ProvisionScreenState extends State<ProvisionScreen> {
                           hintText: 'VD: MyHomeWifi',
                           prefixIcon: Icon(Icons.wifi),
                           border: OutlineInputBorder(),
-                          helperText: 'WiFi mà ESP32 sẽ kết nối sau khi cấu hình xong',
+                          helperText: 'Tên mạng Wi-Fi của trang trại của bạn.',
                         ),
-                        validator: (v) =>
-                            v == null || v.trim().isEmpty ? 'Vui lòng nhập tên WiFi' : null,
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? 'Vui lòng nhập tên WiFi'
+                            : null,
                       ),
                       const SizedBox(height: 14),
 
@@ -254,15 +300,18 @@ class _ProvisionScreenState extends State<ProvisionScreen> {
                           prefixIcon: const Icon(Icons.lock_outline),
                           border: const OutlineInputBorder(),
                           suffixIcon: IconButton(
-                            icon: Icon(_obscureWifi
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined),
+                            icon: Icon(
+                              _obscureWifi
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                            ),
                             onPressed: () =>
                                 setState(() => _obscureWifi = !_obscureWifi),
                           ),
                         ),
-                        validator: (v) =>
-                            v == null || v.isEmpty ? 'Vui lòng nhập mật khẩu WiFi' : null,
+                        validator: (v) => v == null || v.isEmpty
+                            ? 'Vui lòng nhập mật khẩu WiFi'
+                            : null,
                       ),
                       const SizedBox(height: 14),
                     ],
@@ -282,19 +331,39 @@ class _ProvisionScreenState extends State<ProvisionScreen> {
                   backgroundColor: const Color(0xFF2E7D32),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 icon: _loading
                     ? const SizedBox(
                         height: 18,
                         width: 18,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white),
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
                     : const Icon(Icons.send),
                 label: Text(
                   _loading ? 'Đang gửi...' : 'Gửi Cấu hình đến ESP32',
                   style: const TextStyle(fontSize: 16),
+                ),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: _loading ? null : _sendMockSensorData,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFFE65100),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  side: const BorderSide(color: Color(0xFFE65100)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.bug_report),
+                label: const Text(
+                  'Tạo / Nạp Mạch Giả Lập (Debug)',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(height: 32),
@@ -311,13 +380,13 @@ class _ProvisionScreenState extends State<ProvisionScreen> {
     final color = isSuccess
         ? Colors.green
         : isError
-            ? Colors.red
-            : Colors.blue;
+        ? Colors.red
+        : Colors.blue;
     final icon = isSuccess
         ? Icons.check_circle_outline
         : isError
-            ? Icons.error_outline
-            : Icons.sync;
+        ? Icons.error_outline
+        : Icons.sync;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -396,7 +465,10 @@ class _StepCard extends StatelessWidget {
             Expanded(
               child: Text(
                 title,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
                 softWrap: true,
               ),
             ),
@@ -404,8 +476,10 @@ class _StepCard extends StatelessWidget {
         ),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4),
-          child: Text(description,
-              style: const TextStyle(fontSize: 12, color: Colors.black54)),
+          child: Text(
+            description,
+            style: const TextStyle(fontSize: 12, color: Colors.black54),
+          ),
         ),
       ),
     );

@@ -40,7 +40,11 @@ class DashboardTab extends StatelessWidget {
               background: Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFF1A3C34), Color(0xFF1B5E20), Color(0xFF2E7D32)],
+                    colors: [
+                      Color(0xFF1A3C34),
+                      Color(0xFF1B5E20),
+                      Color(0xFF2E7D32),
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     stops: [0.0, 0.5, 1.0],
@@ -62,10 +66,14 @@ class DashboardTab extends StatelessWidget {
                                 color: Colors.white.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.25)),
+                                  color: Colors.white.withValues(alpha: 0.25),
+                                ),
                               ),
-                              child: const Icon(Icons.eco,
-                                  color: Colors.white, size: 22),
+                              child: const Icon(
+                                Icons.eco,
+                                color: Colors.white,
+                                size: 22,
+                              ),
                             ),
                             const SizedBox(width: 12),
                             // Greeting
@@ -75,11 +83,10 @@ class DashboardTab extends StatelessWidget {
                                 builder: (context, snap) {
                                   final name =
                                       (snap.data?.username.isNotEmpty == true)
-                                          ? snap.data!.username
-                                          : (user.displayName?.isNotEmpty ==
-                                                  true
-                                              ? user.displayName!
-                                              : 'Người dùng');
+                                      ? snap.data!.username
+                                      : (user.displayName?.isNotEmpty == true
+                                            ? user.displayName!
+                                            : 'Người dùng');
                                   return Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -87,8 +94,9 @@ class DashboardTab extends StatelessWidget {
                                       Text(
                                         '${_greeting()},',
                                         style: TextStyle(
-                                          color: Colors.white
-                                              .withValues(alpha: 0.7),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.7,
+                                          ),
                                           fontSize: 12,
                                         ),
                                       ),
@@ -109,12 +117,15 @@ class DashboardTab extends StatelessWidget {
                             // Online badge
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 5),
+                                horizontal: 10,
+                                vertical: 5,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.25)),
+                                  color: Colors.white.withValues(alpha: 0.25),
+                                ),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -131,7 +142,9 @@ class DashboardTab extends StatelessWidget {
                                   const Text(
                                     'Trực tuyến',
                                     style: TextStyle(
-                                        color: Colors.white, fontSize: 11),
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -159,7 +172,8 @@ class DashboardTab extends StatelessWidget {
                     padding: EdgeInsets.all(60),
                     child: Center(
                       child: CircularProgressIndicator(
-                          color: Color(0xFF2E7D32)),
+                        color: Color(0xFF2E7D32),
+                      ),
                     ),
                   );
                 }
@@ -180,12 +194,16 @@ class DashboardTab extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF2E7D32)
-                                  .withValues(alpha: 0.1),
+                              color: const Color(
+                                0xFF2E7D32,
+                              ).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Icon(Icons.dashboard_outlined,
-                                size: 16, color: Color(0xFF2E7D32)),
+                            child: const Icon(
+                              Icons.dashboard_outlined,
+                              size: 16,
+                              color: Color(0xFF2E7D32),
+                            ),
                           ),
                           const SizedBox(width: 8),
                           Text(
@@ -199,11 +217,13 @@ class DashboardTab extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 14),
-                      ...farms.map((farm) => _FarmDashboardCard(
-                            uid: user.uid,
-                            farm: farm,
-                            rtdbService: rtdbService,
-                          )),
+                      ...farms.map(
+                        (farm) => _FarmDashboardCard(
+                          uid: user.uid,
+                          farm: farm,
+                          rtdbService: rtdbService,
+                        ),
+                      ),
                     ],
                   ),
                 );
@@ -239,8 +259,11 @@ class DashboardTab extends StatelessWidget {
                 color: Color(0xFFE8F5E9),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.nature_people_outlined,
-                  size: 52, color: Color(0xFF2E7D32)),
+              child: const Icon(
+                Icons.nature_people_outlined,
+                size: 52,
+                color: Color(0xFF2E7D32),
+              ),
             ),
             const SizedBox(height: 20),
             const Text(
@@ -255,7 +278,11 @@ class DashboardTab extends StatelessWidget {
             Text(
               'Vào tab "Nông trại" để thêm nông trại mới\nvà kết nối thiết bị cảm biến ESP32 của bạn.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey.shade500, fontSize: 13.5, height: 1.5),
+              style: TextStyle(
+                color: Colors.grey.shade500,
+                fontSize: 13.5,
+                height: 1.5,
+              ),
             ),
           ],
         ),
@@ -278,8 +305,11 @@ class DashboardTab extends StatelessWidget {
             Icon(Icons.error_outline, color: Colors.red.shade600),
             const SizedBox(width: 10),
             Expanded(
-                child: Text('Lỗi tải dữ liệu: $msg',
-                    style: TextStyle(color: Colors.red.shade700))),
+              child: Text(
+                'Lỗi tải dữ liệu: $msg',
+                style: TextStyle(color: Colors.red.shade700),
+              ),
+            ),
           ],
         ),
       ),
@@ -337,8 +367,11 @@ class _FarmDashboardCard extends StatelessWidget {
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.landscape,
-                      color: Colors.white, size: 18),
+                  child: const Icon(
+                    Icons.landscape,
+                    color: Colors.white,
+                    size: 18,
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -364,7 +397,9 @@ class _FarmDashboardCard extends StatelessWidget {
                   padding: EdgeInsets.all(24),
                   child: Center(
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Color(0xFF2E7D32)),
+                      strokeWidth: 2,
+                      color: Color(0xFF2E7D32),
+                    ),
                   ),
                 );
               }
@@ -391,14 +426,20 @@ class _FarmDashboardCard extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.info_outline,
-                            color: Color(0xFFF59E0B), size: 20),
+                        const Icon(
+                          Icons.info_outline,
+                          color: Color(0xFFF59E0B),
+                          size: 20,
+                        ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
                             'Chưa có cảm biến nào kết nối.\nVào Tab Nông trại để thêm cảm biến.',
                             style: TextStyle(
-                                fontSize: 12.5, color: Colors.grey.shade700, height: 1.4),
+                              fontSize: 12.5,
+                              color: Colors.grey.shade700,
+                              height: 1.4,
+                            ),
                           ),
                         ),
                       ],
@@ -441,8 +482,10 @@ class _SensorMetricsView extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFE8F5E9),
                   borderRadius: BorderRadius.circular(8),
@@ -450,15 +493,19 @@ class _SensorMetricsView extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.sensors,
-                        size: 13, color: Color(0xFF2E7D32)),
+                    const Icon(
+                      Icons.sensors,
+                      size: 13,
+                      color: Color(0xFF2E7D32),
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       sensor.id,
                       style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF1B5E20)),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1B5E20),
+                      ),
                     ),
                   ],
                 ),
@@ -483,7 +530,10 @@ class _SensorMetricsView extends StatelessWidget {
                 value: '${sensor.temperature.toStringAsFixed(1)}°C',
                 icon: Icons.thermostat_outlined,
                 status: sensor.tempStatus,
-                progress: ((sensor.temperature - 12) / (35 - 12)).clamp(0.0, 1.0),
+                progress: ((sensor.temperature - 12) / (35 - 12)).clamp(
+                  0.0,
+                  1.0,
+                ),
               ),
               _MetricTile(
                 label: 'Độ ẩm KK',
@@ -524,15 +574,19 @@ class _SensorMetricsView extends StatelessWidget {
               ),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                  color: const Color(0xFF2E7D32).withValues(alpha: 0.2)),
+                color: const Color(0xFF2E7D32).withValues(alpha: 0.2),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Row(
                   children: [
-                    Icon(Icons.psychology_outlined,
-                        size: 16, color: Color(0xFF2E7D32)),
+                    Icon(
+                      Icons.psychology_outlined,
+                      size: 16,
+                      color: Color(0xFF2E7D32),
+                    ),
                     SizedBox(width: 6),
                     Text(
                       'Đánh giá & Khuyến nghị AI',
@@ -545,12 +599,19 @@ class _SensorMetricsView extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                ...adviceList.map((a) => Padding(
-                      padding: const EdgeInsets.only(top: 3),
-                      child: Text(a,
-                          style: const TextStyle(
-                              fontSize: 12, color: Colors.black87, height: 1.4)),
-                    )),
+                ...adviceList.map(
+                  (a) => Padding(
+                    padding: const EdgeInsets.only(top: 3),
+                    child: Text(
+                      a,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.black87,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -631,11 +692,14 @@ class _MetricTile extends StatelessWidget {
             children: [
               Icon(icon, size: 14, color: status.color),
               const SizedBox(width: 5),
-              Text(label,
-                  style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey.shade600,
-                      fontWeight: FontWeight.w500)),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ],
           ),
           Text(

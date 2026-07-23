@@ -46,7 +46,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.'),
+            content: Text(
+              'Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.',
+            ),
             backgroundColor: Color(0xFF2E7D32),
           ),
         );
@@ -58,7 +60,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } on Exception catch (e) {
       final msg = e.toString().toLowerCase();
       if (msg.contains('network') || msg.contains('socket')) {
-        setState(() => _errorMessage = 'Không có kết nối mạng. Kiểm tra Wi-Fi hoặc dữ liệu di động.');
+        setState(
+          () => _errorMessage =
+              'Không có kết nối mạng. Kiểm tra Wi-Fi hoặc dữ liệu di động.',
+        );
       } else {
         setState(() => _errorMessage = 'Đã xảy ra lỗi. Vui lòng thử lại.');
       }
@@ -187,16 +192,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       prefixIcon: const Icon(Icons.lock_outlined),
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscurePassword
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined),
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                        ),
                         onPressed: () => setState(
-                            () => _obscurePassword = !_obscurePassword),
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
                       ),
                     ),
                     validator: (v) {
-                      if (v == null || v.isEmpty) return 'Vui lòng nhập mật khẩu';
-                      if (v.length < 6) return 'Mật khẩu phải có ít nhất 6 ký tự';
+                      if (v == null || v.isEmpty)
+                        return 'Vui lòng nhập mật khẩu';
+                      if (v.length < 6)
+                        return 'Mật khẩu phải có ít nhất 6 ký tự';
                       return null;
                     },
                   ),
@@ -213,11 +223,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       prefixIcon: const Icon(Icons.lock_outlined),
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscureConfirm
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined),
-                        onPressed: () => setState(
-                            () => _obscureConfirm = !_obscureConfirm),
+                        icon: Icon(
+                          _obscureConfirm
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                        ),
+                        onPressed: () =>
+                            setState(() => _obscureConfirm = !_obscureConfirm),
                       ),
                     ),
                     validator: (v) {
@@ -236,7 +248,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   if (_errorMessage != null)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 10),
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.red.shade50,
                         border: Border.all(color: Colors.red.shade200),
@@ -244,8 +258,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.error_outline,
-                              color: Colors.red.shade700, size: 18),
+                          Icon(
+                            Icons.error_outline,
+                            color: Colors.red.shade700,
+                            size: 18,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
@@ -265,17 +282,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       backgroundColor: const Color(0xFF2E7D32),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                     child: _loading
                         ? const SizedBox(
                             height: 20,
                             width: 20,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white),
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
-                        : const Text('Tạo tài khoản',
-                            style: TextStyle(fontSize: 16)),
+                        : const Text(
+                            'Tạo tài khoản',
+                            style: TextStyle(fontSize: 16),
+                          ),
                   ),
                   const SizedBox(height: 16),
 

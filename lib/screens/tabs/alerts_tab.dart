@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/farm_model.dart';
+
+import '../../widgets/plant_preset_dropdown.dart';
 import '../../services/firestore_service.dart';
 import '../../services/rtdb_service.dart';
 
-class AlertsTab extends StatelessWidget {
+class AlertsTab extends StatefulWidget {
   const AlertsTab({super.key});
 
+  @override
+  State<AlertsTab> createState() => _AlertsTabState();
+}
+
+class _AlertsTabState extends State<AlertsTab> {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -33,8 +40,10 @@ class AlertsTab extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(
-              child: Text('Lỗi: ${snapshot.error}',
-                  style: const TextStyle(color: Colors.red)),
+              child: Text(
+                'Lỗi: ${snapshot.error}',
+                style: const TextStyle(color: Colors.red),
+              ),
             );
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -55,22 +64,30 @@ class AlertsTab extends StatelessWidget {
                       color: Color(0xFFE8F5E9),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.notifications_none_outlined,
-                        size: 52, color: Color(0xFF2E7D32)),
+                    child: const Icon(
+                      Icons.notifications_none_outlined,
+                      size: 52,
+                      color: Color(0xFF2E7D32),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   const Text(
                     'Chưa có cảnh báo nào',
                     style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1B5E20)),
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1B5E20),
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Thêm trang trại và kết nối cảm biến\nđể bắt đầu nhận phân tích AI.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey.shade500, fontSize: 13, height: 1.5),
+                    style: TextStyle(
+                      color: Colors.grey.shade500,
+                      fontSize: 13,
+                      height: 1.5,
+                    ),
                   ),
                 ],
               ),
@@ -90,13 +107,15 @@ class AlertsTab extends StatelessWidget {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Farm label
                       Padding(
                         padding: const EdgeInsets.only(bottom: 10),
                         child: Row(
                           children: [
-                            const Icon(Icons.landscape_outlined,
-                                size: 15, color: Color(0xFF2E7D32)),
+                            const Icon(
+                              Icons.landscape_outlined,
+                              size: 15,
+                              color: Color(0xFF2E7D32),
+                            ),
                             const SizedBox(width: 6),
                             Text(
                               farm.name,
@@ -109,8 +128,9 @@ class AlertsTab extends StatelessWidget {
                           ],
                         ),
                       ),
-                      ...sensors.map((sensor) =>
-                          _AlertCard(farm: farm, sensor: sensor)),
+                      ...sensors.map(
+                        (sensor) => _AlertCard(farm: farm, sensor: sensor),
+                      ),
                     ],
                   );
                 },
@@ -123,7 +143,7 @@ class AlertsTab extends StatelessWidget {
   }
 }
 
-// ── Alert Card ────────────────────────────────────────────────────────────────
+// ─ Alert Card ────────────────────────────────────────────────────────────────
 
 class _AlertCard extends StatelessWidget {
   final FarmModel farm;
@@ -142,9 +162,7 @@ class _AlertCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border(
-          left: BorderSide(color: status.color, width: 4),
-        ),
+        border: Border(left: BorderSide(color: status.color, width: 4)),
         boxShadow: [
           BoxShadow(
             color: status.color.withValues(alpha: 0.08),
@@ -158,7 +176,6 @@ class _AlertCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header row
             Row(
               children: [
                 Container(
@@ -194,7 +211,9 @@ class _AlertCard extends StatelessWidget {
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 4),
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: status.color,
                     borderRadius: BorderRadius.circular(20),
@@ -215,7 +234,6 @@ class _AlertCard extends StatelessWidget {
               const SizedBox(height: 14),
               const Divider(height: 1),
               const SizedBox(height: 12),
-              // AI Analysis header
               Row(
                 children: [
                   Container(
@@ -224,8 +242,11 @@ class _AlertCard extends StatelessWidget {
                       color: const Color(0xFFE8F5E9),
                       borderRadius: BorderRadius.circular(7),
                     ),
-                    child: const Icon(Icons.psychology_outlined,
-                        size: 14, color: Color(0xFF2E7D32)),
+                    child: const Icon(
+                      Icons.psychology_outlined,
+                      size: 14,
+                      color: Color(0xFF2E7D32),
+                    ),
                   ),
                   const SizedBox(width: 7),
                   const Text(
@@ -239,7 +260,6 @@ class _AlertCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8),
-              // Advice items
               ...adviceList.map(
                 (adv) => Padding(
                   padding: const EdgeInsets.only(top: 5),
@@ -260,7 +280,10 @@ class _AlertCard extends StatelessWidget {
                         child: Text(
                           adv,
                           style: const TextStyle(
-                              fontSize: 12.5, height: 1.4, color: Colors.black87),
+                            fontSize: 12.5,
+                            height: 1.4,
+                            color: Colors.black87,
+                          ),
                         ),
                       ),
                     ],
@@ -273,15 +296,20 @@ class _AlertCard extends StatelessWidget {
               const SizedBox(height: 10),
               Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 8),
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFE8F5E9),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.check_circle_outline,
-                        size: 16, color: Color(0xFF2E7D32)),
+                    const Icon(
+                      Icons.check_circle_outline,
+                      size: 16,
+                      color: Color(0xFF2E7D32),
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -297,6 +325,28 @@ class _AlertCard extends StatelessWidget {
                 ),
               ),
             ],
+
+            const SizedBox(height: 14),
+            const Divider(height: 1),
+            const SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Cây trồng:',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black54,
+                  ),
+                ),
+                PlantPresetDropdown(
+                  farmId: farm.id,
+                  sensorId: sensor.id,
+                  currentPlantName: sensor.customThresholds?.plantName,
+                ),
+              ],
+            ),
           ],
         ),
       ),

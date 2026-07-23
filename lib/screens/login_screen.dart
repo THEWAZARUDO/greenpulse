@@ -34,12 +34,11 @@ class _LoginScreenState extends State<LoginScreen>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
-    _fadeAnim =
-        CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
-    _slideAnim =
-        Tween<Offset>(begin: const Offset(0, 0.25), end: Offset.zero)
-            .animate(
-                CurvedAnimation(parent: _animCtrl, curve: Curves.easeOutCubic));
+    _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.25),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _animCtrl, curve: Curves.easeOutCubic));
     _animCtrl.forward();
   }
 
@@ -66,9 +65,12 @@ class _LoginScreenState extends State<LoginScreen>
       setState(() => _errorMessage = _mapFirebaseError(e.code));
     } on Exception catch (e) {
       final msg = e.toString().toLowerCase();
-      setState(() => _errorMessage = (msg.contains('network') || msg.contains('socket'))
-          ? 'Không có kết nối mạng. Kiểm tra Wi-Fi hoặc dữ liệu di động.'
-          : 'Đã xảy ra lỗi. Vui lòng thử lại.');
+      setState(
+        () =>
+            _errorMessage = (msg.contains('network') || msg.contains('socket'))
+            ? 'Không có kết nối mạng. Kiểm tra Wi-Fi hoặc dữ liệu di động.'
+            : 'Đã xảy ra lỗi. Vui lòng thử lại.',
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -107,7 +109,11 @@ class _LoginScreenState extends State<LoginScreen>
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF1A3C34), Color(0xFF1B5E20), Color(0xFF2E7D32)],
+                colors: [
+                  Color(0xFF1A3C34),
+                  Color(0xFF1B5E20),
+                  Color(0xFF2E7D32),
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 stops: [0.0, 0.45, 1.0],
@@ -120,27 +126,21 @@ class _LoginScreenState extends State<LoginScreen>
             right: -70,
             child: _decorativeCircle(260, 0.06),
           ),
-          Positioned(
-            top: 80,
-            right: 60,
-            child: _decorativeCircle(80, 0.04),
-          ),
+          Positioned(top: 80, right: 60, child: _decorativeCircle(80, 0.04)),
           Positioned(
             bottom: -120,
             left: -80,
             child: _decorativeCircle(320, 0.05),
           ),
-          Positioned(
-            bottom: 160,
-            left: 30,
-            child: _decorativeCircle(50, 0.07),
-          ),
+          Positioned(bottom: 160, left: 30, child: _decorativeCircle(50, 0.07)),
           // ── Main Content ─────────────────────────────────────────────────
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 32,
+                ),
                 child: FadeTransition(
                   opacity: _fadeAnim,
                   child: SlideTransition(
@@ -182,7 +182,9 @@ class _LoginScreenState extends State<LoginScreen>
             color: Colors.white.withValues(alpha: 0.13),
             shape: BoxShape.circle,
             border: Border.all(
-                color: Colors.white.withValues(alpha: 0.3), width: 2),
+              color: Colors.white.withValues(alpha: 0.3),
+              width: 2,
+            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.15),
@@ -263,7 +265,8 @@ class _LoginScreenState extends State<LoginScreen>
                   keyboardType: TextInputType.emailAddress,
                   action: TextInputAction.next,
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Vui lòng nhập email';
+                    if (v == null || v.trim().isEmpty)
+                      return 'Vui lòng nhập email';
                     if (!v.contains('@')) return 'Email không hợp lệ';
                     return null;
                   },
@@ -302,12 +305,18 @@ class _LoginScreenState extends State<LoginScreen>
                     onPressed: _showForgotPasswordDialog,
                     style: TextButton.styleFrom(
                       foregroundColor: const Color(0xFF2E7D32),
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 0,
+                      ),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                     child: const Text(
                       'Quên mật khẩu?',
-                      style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
@@ -317,7 +326,9 @@ class _LoginScreenState extends State<LoginScreen>
                   const SizedBox(height: 10),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 11),
+                      horizontal: 14,
+                      vertical: 11,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFF3F3),
                       borderRadius: BorderRadius.circular(12),
@@ -325,14 +336,19 @@ class _LoginScreenState extends State<LoginScreen>
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.error_outline,
-                            color: Colors.red.shade600, size: 18),
+                        Icon(
+                          Icons.error_outline,
+                          color: Colors.red.shade600,
+                          size: 18,
+                        ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
                             _errorMessage!,
                             style: TextStyle(
-                                color: Colors.red.shade700, fontSize: 12.5),
+                              color: Colors.red.shade700,
+                              fontSize: 12.5,
+                            ),
                           ),
                         ),
                       ],
@@ -352,12 +368,15 @@ class _LoginScreenState extends State<LoginScreen>
                     Text(
                       'Chưa có tài khoản?',
                       style: TextStyle(
-                          color: Colors.grey.shade600, fontSize: 13),
+                        color: Colors.grey.shade600,
+                        fontSize: 13,
+                      ),
                     ),
                     TextButton(
                       onPressed: () => Navigator.of(context).push(
                         MaterialPageRoute(
-                            builder: (_) => const RegisterScreen()),
+                          builder: (_) => const RegisterScreen(),
+                        ),
                       ),
                       style: TextButton.styleFrom(
                         foregroundColor: const Color(0xFF2E7D32),
@@ -406,8 +425,10 @@ class _LoginScreenState extends State<LoginScreen>
         suffixIcon: suffix,
         filled: true,
         fillColor: fillColor,
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 14,
+          horizontal: 16,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
@@ -468,7 +489,9 @@ class _LoginScreenState extends State<LoginScreen>
                       height: 22,
                       width: 22,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2.5, color: Colors.white),
+                        strokeWidth: 2.5,
+                        color: Colors.white,
+                      ),
                     )
                   : const Text(
                       'Đăng nhập',
@@ -498,12 +521,17 @@ class _LoginScreenState extends State<LoginScreen>
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
               title: Row(
                 children: const [
                   Icon(Icons.lock_reset, color: Color(0xFF2E7D32)),
                   SizedBox(width: 8),
-                  Text('Quên mật khẩu?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  Text(
+                    'Quên mật khẩu?',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
                 ],
               ),
               content: Form(
@@ -525,10 +553,13 @@ class _LoginScreenState extends State<LoginScreen>
                         prefixIcon: const Icon(Icons.email_outlined, size: 20),
                         filled: true,
                         fillColor: const Color(0xFFF6FAF6),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
                       validator: (v) {
-                        if (v == null || v.trim().isEmpty) return 'Vui lòng nhập email';
+                        if (v == null || v.trim().isEmpty)
+                          return 'Vui lòng nhập email';
                         if (!v.contains('@')) return 'Email không hợp lệ';
                         return null;
                       },
@@ -546,7 +577,10 @@ class _LoginScreenState extends State<LoginScreen>
               actions: [
                 TextButton(
                   onPressed: sending ? null : () => Navigator.pop(ctx),
-                  child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
+                  child: const Text(
+                    'Hủy',
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 ),
                 ElevatedButton(
                   onPressed: sending
@@ -558,12 +592,16 @@ class _LoginScreenState extends State<LoginScreen>
                             dialogError = null;
                           });
                           try {
-                            await _authService.sendPasswordResetEmail(email: resetEmailCtrl.text);
+                            await _authService.sendPasswordResetEmail(
+                              email: resetEmailCtrl.text,
+                            );
                             if (ctx.mounted) {
                               Navigator.pop(ctx);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text('Đã gửi email khôi phục! Vui lòng kiểm tra hộp thư của bạn.'),
+                                  content: Text(
+                                    'Đã gửi email khôi phục! Vui lòng kiểm tra hộp thư của bạn.',
+                                  ),
                                   backgroundColor: Color(0xFF1B5E20),
                                 ),
                               );
@@ -572,11 +610,13 @@ class _LoginScreenState extends State<LoginScreen>
                             setDialogState(() {
                               sending = false;
                               if (e.code == 'user-not-found') {
-                                dialogError = 'Tài khoản email này chưa được đăng ký.';
+                                dialogError =
+                                    'Tài khoản email này chưa được đăng ký.';
                               } else if (e.code == 'invalid-email') {
                                 dialogError = 'Địa chỉ email không hợp lệ.';
                               } else {
-                                dialogError = 'Không thể gửi email. Vui lòng thử lại sau.';
+                                dialogError =
+                                    'Không thể gửi email. Vui lòng thử lại sau.';
                               }
                             });
                           } catch (_) {
@@ -589,13 +629,18 @@ class _LoginScreenState extends State<LoginScreen>
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2E7D32),
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   child: sending
                       ? const SizedBox(
                           width: 18,
                           height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
                         )
                       : const Text('Gửi yêu cầu'),
                 ),

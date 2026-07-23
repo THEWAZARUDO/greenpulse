@@ -3,7 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/user_model.dart';
 import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
-import '../../services/notification_service.dart';
+import '../../models/plant_preset_manager.dart';
+import '../../services/rtdb_service.dart';
+import '../../models/farm_model.dart';
 
 class ProfileTab extends StatelessWidget {
   const ProfileTab({super.key});
@@ -26,13 +28,11 @@ class ProfileTab extends StatelessWidget {
           final username = userModel?.username.isNotEmpty == true
               ? userModel!.username
               : (user.displayName?.isNotEmpty == true
-                  ? user.displayName!
-                  : 'Người dùng GreenPulse');
+                    ? user.displayName!
+                    : 'Người dùng GreenPulse');
 
           // Initial letter for avatar
-          final initial = username.isNotEmpty
-              ? username[0].toUpperCase()
-              : 'G';
+          final initial = username.isNotEmpty ? username[0].toUpperCase() : 'G';
 
           return CustomScrollView(
             slivers: [
@@ -50,7 +50,7 @@ class ProfileTab extends StatelessWidget {
                         colors: [
                           Color(0xFF1A3C34),
                           Color(0xFF1B5E20),
-                          Color(0xFF2E7D32)
+                          Color(0xFF2E7D32),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -73,12 +73,14 @@ class ProfileTab extends StatelessWidget {
                                   color: Colors.white.withValues(alpha: 0.2),
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                      color: Colors.white.withValues(alpha: 0.5),
-                                      width: 2.5),
+                                    color: Colors.white.withValues(alpha: 0.5),
+                                    width: 2.5,
+                                  ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color:
-                                          Colors.black.withValues(alpha: 0.2),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.2,
+                                      ),
                                       blurRadius: 16,
                                       offset: const Offset(0, 6),
                                     ),
@@ -98,7 +100,10 @@ class ProfileTab extends StatelessWidget {
                               // Edit badge
                               GestureDetector(
                                 onTap: () => _showEditNameDialog(
-                                    context, user.uid, username),
+                                  context,
+                                  user.uid,
+                                  username,
+                                ),
                                 child: Container(
                                   padding: const EdgeInsets.all(5),
                                   decoration: BoxDecoration(
@@ -106,15 +111,19 @@ class ProfileTab extends StatelessWidget {
                                     shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
-                                        color:
-                                            Colors.black.withValues(alpha: 0.15),
+                                        color: Colors.black.withValues(
+                                          alpha: 0.15,
+                                        ),
                                         blurRadius: 6,
                                         offset: const Offset(0, 2),
                                       ),
                                     ],
                                   ),
-                                  child: const Icon(Icons.edit,
-                                      size: 14, color: Color(0xFF2E7D32)),
+                                  child: const Icon(
+                                    Icons.edit,
+                                    size: 14,
+                                    color: Color(0xFF2E7D32),
+                                  ),
                                 ),
                               ),
                             ],
@@ -141,23 +150,27 @@ class ProfileTab extends StatelessWidget {
                           // Role badge
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 5),
+                              horizontal: 14,
+                              vertical: 5,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.3)),
+                                color: Colors.white.withValues(alpha: 0.3),
+                              ),
                             ),
                             child: const Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.eco,
-                                    size: 13, color: Colors.white),
+                                Icon(Icons.eco, size: 13, color: Colors.white),
                                 SizedBox(width: 5),
                                 Text(
                                   'Nông hộ GreenPulse',
                                   style: TextStyle(
-                                      color: Colors.white, fontSize: 11.5),
+                                    color: Colors.white,
+                                    fontSize: 11.5,
+                                  ),
                                 ),
                               ],
                             ),
@@ -184,17 +197,24 @@ class ProfileTab extends StatelessWidget {
                           _SettingsTile(
                             icon: Icons.person_outline,
                             label: 'Đổi tên hiển thị',
-                            trailing: const Icon(Icons.chevron_right,
-                                color: Colors.grey),
+                            trailing: const Icon(
+                              Icons.chevron_right,
+                              color: Colors.grey,
+                            ),
                             onTap: () => _showEditNameDialog(
-                                context, user.uid, username),
+                              context,
+                              user.uid,
+                              username,
+                            ),
                           ),
                           _SettingsTile(
                             icon: Icons.email_outlined,
                             label: user.email ?? '',
                             trailing: Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 3),
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFE8F5E9),
                                 borderRadius: BorderRadius.circular(8),
@@ -202,9 +222,10 @@ class ProfileTab extends StatelessWidget {
                               child: const Text(
                                 'Đã xác thực',
                                 style: TextStyle(
-                                    fontSize: 10,
-                                    color: Color(0xFF2E7D32),
-                                    fontWeight: FontWeight.bold),
+                                  fontSize: 10,
+                                  color: Color(0xFF2E7D32),
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
@@ -213,36 +234,7 @@ class ProfileTab extends StatelessWidget {
                       const SizedBox(height: 14),
 
                       // Threshold reference card
-                      _SectionCard(
-                        title: 'Ngưỡng an toàn cây trồng',
-                        icon: Icons.tune_outlined,
-                        children: [
-                          _ThresholdRow(
-                            icon: Icons.thermostat_outlined,
-                            label: 'Nhiệt độ tối ưu',
-                            value: '18 – 32 °C',
-                            color: const Color(0xFFEF5350),
-                          ),
-                          _ThresholdRow(
-                            icon: Icons.water_drop_outlined,
-                            label: 'Độ ẩm không khí',
-                            value: '50 – 80 %',
-                            color: const Color(0xFF42A5F5),
-                          ),
-                          _ThresholdRow(
-                            icon: Icons.grass_outlined,
-                            label: 'Độ ẩm đất tối ưu',
-                            value: '40 – 75 %',
-                            color: const Color(0xFF8D6E63),
-                          ),
-                          _ThresholdRow(
-                            icon: Icons.wb_sunny_outlined,
-                            label: 'Ánh sáng tối ưu',
-                            value: '300 – 2000 lux',
-                            color: const Color(0xFFFFA726),
-                          ),
-                        ],
-                      ),
+                      const _ThresholdReferenceCard(),
                       const SizedBox(height: 14),
 
                       // App info card
@@ -256,29 +248,11 @@ class ProfileTab extends StatelessWidget {
                             trailing: const Text(
                               '1 phút / lần',
                               style: TextStyle(
-                                  color: Color(0xFF2E7D32),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13),
+                                color: Color(0xFF2E7D32),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
                             ),
-                          ),
-                          _SettingsTile(
-                            icon: Icons.send_to_mobile_outlined,
-                            label: 'Thử nghiệm gửi thông báo đẩy',
-                            trailing: const Icon(Icons.touch_app, color: Color(0xFF2E7D32), size: 18),
-                            onTap: () async {
-                              await NotificationService().showNotification(
-                                title: '🚨 [GREENPULSE TEST] Cảnh báo khẩn cấp',
-                                body: 'Giao thức thông báo đẩy 1 phút/lần đang hoạt động bình thường trên điện thoại!',
-                              );
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Đã phát thông báo thử nghiệm tới điện thoại!'),
-                                    backgroundColor: Color(0xFF2E7D32),
-                                  ),
-                                );
-                              }
-                            },
                           ),
                         ],
                       ),
@@ -295,7 +269,9 @@ class ProfileTab extends StatelessWidget {
                             trailing: const Text(
                               'v1.0.0',
                               style: TextStyle(
-                                  color: Colors.grey, fontSize: 13),
+                                color: Colors.grey,
+                                fontSize: 13,
+                              ),
                             ),
                           ),
                           _SettingsTile(
@@ -304,7 +280,9 @@ class ProfileTab extends StatelessWidget {
                             trailing: const Text(
                               'WiFi AP / RTDB',
                               style: TextStyle(
-                                  color: Colors.grey, fontSize: 13),
+                                color: Colors.grey,
+                                fontSize: 13,
+                              ),
                             ),
                           ),
                         ],
@@ -320,15 +298,20 @@ class ProfileTab extends StatelessWidget {
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.red.shade600,
                             side: BorderSide(
-                                color: Colors.red.shade300, width: 1.5),
+                              color: Colors.red.shade300,
+                              width: 1.5,
+                            ),
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14)),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                           ),
                           icon: const Icon(Icons.logout, size: 20),
                           label: const Text(
                             'Đăng xuất tài khoản',
                             style: TextStyle(
-                                fontSize: 15, fontWeight: FontWeight.w600),
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
@@ -344,7 +327,10 @@ class ProfileTab extends StatelessWidget {
   }
 
   void _showEditNameDialog(
-      BuildContext context, String uid, String currentName) {
+    BuildContext context,
+    String uid,
+    String currentName,
+  ) {
     final ctrl = TextEditingController(text: currentName);
     showDialog(
       context: context,
@@ -355,8 +341,7 @@ class ProfileTab extends StatelessWidget {
           controller: ctrl,
           decoration: InputDecoration(
             labelText: 'Tên mới',
-            border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             prefixIcon: const Icon(Icons.person_outline),
           ),
         ),
@@ -369,13 +354,13 @@ class ProfileTab extends StatelessWidget {
             onPressed: () async {
               if (ctrl.text.trim().isEmpty) return;
               Navigator.of(ctx).pop();
-              await FirestoreService()
-                  .updateUsername(uid, ctrl.text.trim());
+              await FirestoreService().updateUsername(uid, ctrl.text.trim());
             },
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFF2E7D32),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             child: const Text('Lưu'),
           ),
@@ -390,8 +375,7 @@ class ProfileTab extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Đăng xuất'),
-        content: const Text(
-            'Bạn có chắc muốn đăng xuất khỏi ứng dụng không?'),
+        content: const Text('Bạn có chắc muốn đăng xuất khỏi ứng dụng không?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
@@ -405,7 +389,8 @@ class ProfileTab extends StatelessWidget {
             style: FilledButton.styleFrom(
               backgroundColor: Colors.red,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             child: const Text('Đăng xuất'),
           ),
@@ -421,11 +406,13 @@ class _SectionCard extends StatelessWidget {
   final String title;
   final IconData icon;
   final List<Widget> children;
+  final Widget? titleTrailing;
 
   const _SectionCard({
     required this.title,
     required this.icon,
     required this.children,
+    this.titleTrailing,
   });
 
   @override
@@ -446,20 +433,22 @@ class _SectionCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding:
-                const EdgeInsets.fromLTRB(16, 14, 16, 0),
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
             child: Row(
               children: [
                 Icon(icon, size: 16, color: const Color(0xFF2E7D32)),
                 const SizedBox(width: 7),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                    color: Color(0xFF1B5E20),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: Color(0xFF1B5E20),
+                    ),
                   ),
                 ),
+                ?titleTrailing,
               ],
             ),
           ),
@@ -501,8 +490,10 @@ class _SettingsTile extends StatelessWidget {
         ),
         child: Icon(icon, size: 16, color: const Color(0xFF2E7D32)),
       ),
-      title: Text(label,
-          style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w500)),
+      title: Text(
+        label,
+        style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w500),
+      ),
       trailing: trailing,
       onTap: onTap,
     );
@@ -537,8 +528,10 @@ class _ThresholdRow extends StatelessWidget {
         ),
         child: Icon(icon, size: 16, color: color),
       ),
-      title: Text(label,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+      title: Text(
+        label,
+        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+      ),
       trailing: Text(
         value,
         style: TextStyle(
@@ -547,6 +540,173 @@ class _ThresholdRow extends StatelessWidget {
           color: color,
         ),
       ),
+    );
+  }
+}
+
+// ── Stateful Threshold Reference Card ──────────────────────────────────────────
+
+class _ThresholdReferenceCard extends StatefulWidget {
+  const _ThresholdReferenceCard();
+
+  @override
+  State<_ThresholdReferenceCard> createState() =>
+      _ThresholdReferenceCardState();
+}
+
+class _ThresholdReferenceCardState extends State<_ThresholdReferenceCard> {
+  String? _selectedSensorId;
+
+  @override
+  Widget build(BuildContext context) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return const SizedBox();
+
+    return StreamBuilder<List<SensorData>>(
+      stream: RTDBService().watchAllSensors(uid),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const _SectionCard(
+            title: 'Ngưỡng an toàn cây trồng',
+            icon: Icons.tune_outlined,
+            children: [
+              Padding(
+                padding: EdgeInsets.all(16),
+                child: CircularProgressIndicator(),
+              ),
+            ],
+          );
+        }
+
+        final sensors = snapshot.data!;
+        if (sensors.isEmpty) {
+          return const _SectionCard(
+            title: 'Ngưỡng an toàn cây trồng',
+            icon: Icons.tune_outlined,
+            children: [
+              Padding(
+                padding: EdgeInsets.all(16),
+                child: Text('Bạn chưa có mạch/cảm biến nào.'),
+              ),
+            ],
+          );
+        }
+
+        // Đảm bảo selectedSensorId hợp lệ
+        if (_selectedSensorId == null ||
+            !sensors.any((s) => s.id == _selectedSensorId)) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) setState(() => _selectedSensorId = sensors.first.id);
+          });
+        }
+
+        final safeSensorId = _selectedSensorId ?? sensors.first.id;
+        final selectedSensor = sensors.firstWhere(
+          (s) => s.id == safeSensorId,
+          orElse: () => sensors.first,
+        );
+
+        final currentPlantName = selectedSensor.customThresholds?.plantName;
+        final selectedPreset = currentPlantName != null
+            ? PlantPresetManager.getPresetByName(currentPlantName)
+            : (PlantPresetManager.presets.isNotEmpty
+                  ? PlantPresetManager.presets.first
+                  : null);
+
+        return _SectionCard(
+          title: 'Ngưỡng an toàn cây trồng',
+          icon: Icons.tune_outlined,
+          titleTrailing: Container(
+            height: 28,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: safeSensorId,
+                icon: const Icon(
+                  Icons.arrow_drop_down,
+                  size: 16,
+                  color: Color(0xFF2E7D32),
+                ),
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1B5E20),
+                ),
+                items: sensors.map((sensor) {
+                  // Giới hạn độ dài text dropdown
+                  String display = sensor.id;
+                  if (display.length > 10) {
+                    display = '${display.substring(0, 10)}...';
+                  }
+                  return DropdownMenuItem<String>(
+                    value: sensor.id,
+                    child: Text(display),
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  if (val != null) setState(() => _selectedSensorId = val);
+                },
+              ),
+            ),
+          ),
+          children: selectedPreset == null
+              ? [
+                  const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text('Không có dữ liệu giống cây'),
+                  ),
+                ]
+              : [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: Text(
+                      'Đang hiển thị cho: ${selectedPreset.plantName}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1B5E20),
+                      ),
+                    ),
+                  ),
+                  _ThresholdRow(
+                    icon: Icons.thermostat_outlined,
+                    label: 'Nhiệt độ tối ưu',
+                    value:
+                        '${selectedPreset.minTemp} – ${selectedPreset.maxTemp} °C',
+                    color: const Color(0xFFEF5350),
+                  ),
+                  _ThresholdRow(
+                    icon: Icons.water_drop_outlined,
+                    label: 'Độ ẩm không khí',
+                    value:
+                        '${selectedPreset.minHumidity} – ${selectedPreset.maxHumidity} %',
+                    color: const Color(0xFF42A5F5),
+                  ),
+                  _ThresholdRow(
+                    icon: Icons.grass_outlined,
+                    label: 'Độ ẩm đất tối ưu',
+                    value:
+                        '${selectedPreset.minSoil} – ${selectedPreset.maxSoil} %',
+                    color: const Color(0xFF8D6E63),
+                  ),
+                  _ThresholdRow(
+                    icon: Icons.wb_sunny_outlined,
+                    label: 'Ánh sáng tối ưu',
+                    value:
+                        '${selectedPreset.minLight} – ${selectedPreset.maxLight} lux',
+                    color: const Color(0xFFFFA726),
+                  ),
+                ],
+        );
+      },
     );
   }
 }

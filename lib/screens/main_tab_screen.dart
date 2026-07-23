@@ -58,9 +58,10 @@ class _MainTabScreenState extends State<MainTabScreen> {
 
       for (var farm in farms) {
         if (!_sensorSubs.containsKey(farm.id)) {
-          _sensorSubs[farm.id] = _rtdbService
-              .watchSensors(user.uid, farm.id)
-              .listen((sensors) {
+          _sensorSubs[farm
+              .id] = _rtdbService.watchSensors(user.uid, farm.id).listen((
+            sensors,
+          ) {
             bool hasAlert = false;
             String? alertMsg;
 
@@ -123,8 +124,11 @@ class _MainTabScreenState extends State<MainTabScreen> {
                 bottom: false,
                 child: Row(
                   children: [
-                    const Icon(Icons.warning_amber_rounded,
-                        color: Colors.white, size: 22),
+                    const Icon(
+                      Icons.warning_amber_rounded,
+                      color: Colors.white,
+                      size: 22,
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
@@ -153,7 +157,9 @@ class _MainTabScreenState extends State<MainTabScreen> {
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white24,
                         borderRadius: BorderRadius.circular(12),
@@ -161,9 +167,10 @@ class _MainTabScreenState extends State<MainTabScreen> {
                       child: const Text(
                         '1 phút/lần',
                         style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold),
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
@@ -173,10 +180,7 @@ class _MainTabScreenState extends State<MainTabScreen> {
 
           // ── Main Tab View ──────────────────────────────────────────────────
           Expanded(
-            child: IndexedStack(
-              index: _currentIndex,
-              children: _tabs,
-            ),
+            child: IndexedStack(index: _currentIndex, children: _tabs),
           ),
         ],
       ),
@@ -192,7 +196,9 @@ class _MainTabScreenState extends State<MainTabScreen> {
             ),
           ],
           border: _isRedAlertMode
-              ? const Border(top: BorderSide(color: Color(0xFFD32F2F), width: 2))
+              ? const Border(
+                  top: BorderSide(color: Color(0xFFD32F2F), width: 2),
+                )
               : null,
         ),
         child: NavigationBar(

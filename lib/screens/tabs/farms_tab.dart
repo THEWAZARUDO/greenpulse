@@ -4,6 +4,7 @@ import '../../models/farm_model.dart';
 import '../../services/firestore_service.dart';
 import '../../services/rtdb_service.dart';
 import '../provision_screen.dart';
+import '../../widgets/plant_preset_dropdown.dart';
 
 class FarmsTab extends StatelessWidget {
   const FarmsTab({super.key});
@@ -52,8 +53,10 @@ class FarmsTab extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(
-              child: Text('Lỗi: ${snapshot.error}',
-                  style: const TextStyle(color: Colors.red)),
+              child: Text(
+                'Lỗi: ${snapshot.error}',
+                style: const TextStyle(color: Colors.red),
+              ),
             );
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -76,39 +79,54 @@ class FarmsTab extends StatelessWidget {
                         color: Color(0xFFE8F5E9),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.landscape_outlined,
-                          size: 52, color: Color(0xFF2E7D32)),
+                      child: const Icon(
+                        Icons.landscape_outlined,
+                        size: 52,
+                        color: Color(0xFF2E7D32),
+                      ),
                     ),
                     const SizedBox(height: 20),
                     const Text(
                       'Chưa có nông trại nào',
                       style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1B5E20)),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1B5E20),
+                      ),
                     ),
                     const SizedBox(height: 10),
                     Text(
                       'Bấm nút + bên dưới để thêm nông trại đầu tiên.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                          color: Colors.grey.shade500, fontSize: 13.5, height: 1.5),
+                        color: Colors.grey.shade500,
+                        fontSize: 13.5,
+                        height: 1.5,
+                      ),
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton.icon(
-                      onPressed: () =>
-                          _showAddFarmDialog(context, user.uid, firestoreService),
+                      onPressed: () => _showAddFarmDialog(
+                        context,
+                        user.uid,
+                        firestoreService,
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF2E7D32),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 24, vertical: 12),
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
                       icon: const Icon(Icons.add),
-                      label: const Text('Thêm Nông Trại Đầu Tiên',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      label: const Text(
+                        'Thêm Nông Trại Đầu Tiên',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ],
                 ),
@@ -155,8 +173,10 @@ class FarmsTab extends StatelessWidget {
             backgroundColor: const Color(0xFF2E7D32),
             foregroundColor: Colors.white,
             icon: const Icon(Icons.add),
-            label: const Text('Thêm Farm',
-                style: TextStyle(fontWeight: FontWeight.bold)),
+            label: const Text(
+              'Thêm Farm',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -164,23 +184,26 @@ class FarmsTab extends StatelessWidget {
   }
 
   void _showAddFarmDialog(
-      BuildContext context, String uid, FirestoreService firestoreService) {
+    BuildContext context,
+    String uid,
+    FirestoreService firestoreService,
+  ) {
     final ctrl = TextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Thêm Nông Trại Mới',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Thêm Nông Trại Mới',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         content: TextField(
           controller: ctrl,
           autofocus: true,
           decoration: InputDecoration(
             labelText: 'Tên nông trại',
             hintText: 'VD: Trang trại Dâu Tây A',
-            border:
-                OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             prefixIcon: const Icon(Icons.landscape_outlined),
           ),
         ),
@@ -195,16 +218,19 @@ class FarmsTab extends StatelessWidget {
               Navigator.of(ctx).pop();
               await firestoreService.addFarm(uid, ctrl.text.trim());
               if (ctx.mounted) {
-                ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
-                  content: Text('Đã thêm nông trại mới!'),
-                  backgroundColor: Color(0xFF2E7D32),
-                ));
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(
+                    content: Text('Đã thêm nông trại mới!'),
+                    backgroundColor: Color(0xFF2E7D32),
+                  ),
+                );
               }
             },
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFF2E7D32),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             child: const Text('Thêm'),
           ),
@@ -266,8 +292,7 @@ class _FarmManagementCard extends StatelessWidget {
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(9),
                   ),
-                  child: const Icon(Icons.park,
-                      color: Colors.white, size: 16),
+                  child: const Icon(Icons.park, color: Colors.white, size: 16),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -289,8 +314,11 @@ class _FarmManagementCard extends StatelessWidget {
                       color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(7),
                     ),
-                    child: const Icon(Icons.edit_outlined,
-                        color: Colors.white, size: 15),
+                    child: const Icon(
+                      Icons.edit_outlined,
+                      color: Colors.white,
+                      size: 15,
+                    ),
                   ),
                   onPressed: () => _showEditFarmDialog(context),
                   padding: EdgeInsets.zero,
@@ -305,8 +333,11 @@ class _FarmManagementCard extends StatelessWidget {
                       color: Colors.red.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(7),
                     ),
-                    child: const Icon(Icons.delete_outline,
-                        color: Colors.white, size: 15),
+                    child: const Icon(
+                      Icons.delete_outline,
+                      color: Colors.white,
+                      size: 15,
+                    ),
                   ),
                   onPressed: () => _confirmDeleteFarm(context),
                   padding: EdgeInsets.zero,
@@ -330,8 +361,7 @@ class _FarmManagementCard extends StatelessWidget {
                   children: [
                     const Row(
                       children: [
-                        Icon(Icons.sensors,
-                            size: 14, color: Color(0xFF2E7D32)),
+                        Icon(Icons.sensors, size: 14, color: Color(0xFF2E7D32)),
                         SizedBox(width: 5),
                         Text(
                           'Danh sách cảm biến',
@@ -343,22 +373,53 @@ class _FarmManagementCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    TextButton.icon(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const ProvisionScreen()),
-                      ),
-                      style: TextButton.styleFrom(
-                        foregroundColor: const Color(0xFF2E7D32),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      icon: const Icon(Icons.developer_board, size: 14),
-                      label: const Text('Kết nối ESP32',
-                          style: TextStyle(fontSize: 12)),
+                    Wrap(
+                      spacing: 4,
+                      children: [
+                        TextButton.icon(
+                          onPressed: () =>
+                              _showCustomSensorDebugDialog(context),
+                          style: TextButton.styleFrom(
+                            foregroundColor: const Color(0xFFE65100),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          icon: const Icon(Icons.bug_report, size: 14),
+                          label: const Text(
+                            'Tạo Mạch Debug',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        TextButton.icon(
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ProvisionScreen(),
+                            ),
+                          ),
+                          style: TextButton.styleFrom(
+                            foregroundColor: const Color(0xFF2E7D32),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          icon: const Icon(Icons.developer_board, size: 14),
+                          label: const Text(
+                            'Kết nối ESP32',
+                            style: TextStyle(fontSize: 11.5),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -379,7 +440,9 @@ class _FarmManagementCard extends StatelessWidget {
                         child: Text(
                           'Chưa có cảm biến nào. Nhấn "Kết nối ESP32" để ghép nối thiết bị.',
                           style: TextStyle(
-                              fontSize: 12, color: Colors.grey.shade500),
+                            fontSize: 12,
+                            color: Colors.grey.shade500,
+                          ),
                         ),
                       );
                     }
@@ -388,12 +451,18 @@ class _FarmManagementCard extends StatelessWidget {
                       children: sensors
                           .asMap()
                           .entries
-                          .map((e) => _SensorRow(
-                                sensor: e.value,
-                                isLast: e.key == sensors.length - 1,
-                                onDelete: () => rtdbService.deleteSensor(
-                                    uid, farm.id, e.value.id),
-                              ))
+                          .map(
+                            (e) => _SensorRow(
+                              farmId: farm.id,
+                              sensor: e.value,
+                              isLast: e.key == sensors.length - 1,
+                              onDelete: () => rtdbService.deleteSensor(
+                                uid,
+                                farm.id,
+                                e.value.id,
+                              ),
+                            ),
+                          )
                           .toList(),
                     );
                   },
@@ -411,32 +480,31 @@ class _FarmManagementCard extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Đổi tên Nông trại'),
         content: TextField(
           controller: ctrl,
           decoration: InputDecoration(
             labelText: 'Tên mới',
-            border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Hủy')),
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Hủy'),
+          ),
           FilledButton(
             onPressed: () async {
               if (ctrl.text.trim().isEmpty) return;
               Navigator.of(ctx).pop();
-              await firestoreService.updateFarm(
-                  uid, farm.id, ctrl.text.trim());
+              await firestoreService.updateFarm(uid, farm.id, ctrl.text.trim());
             },
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFF2E7D32),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             child: const Text('Lưu'),
           ),
@@ -449,14 +517,16 @@ class _FarmManagementCard extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Xóa Nông trại'),
-        content: Text('Bạn có chắc muốn xóa "${farm.name}" không?\nThao tác này không thể hoàn tác.'),
+        content: Text(
+          'Bạn có chắc muốn xóa "${farm.name}" không?\nThao tác này không thể hoàn tác.',
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Hủy')),
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Hủy'),
+          ),
           FilledButton(
             onPressed: () async {
               Navigator.of(ctx).pop();
@@ -465,11 +535,317 @@ class _FarmManagementCard extends StatelessWidget {
             style: FilledButton.styleFrom(
               backgroundColor: Colors.red,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             child: const Text('Xóa'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showCustomSensorDebugDialog(BuildContext context) {
+    final sensorIdCtrl = TextEditingController(
+      text: 'sensor_debug_${DateTime.now().second.toString().padLeft(2, '0')}',
+    );
+    double temp = 28.0;
+    double humidity = 65.0;
+    double soil = 50.0;
+    double light = 1200.0;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+            title: const Row(
+              children: [
+                Icon(Icons.bug_report, color: Color(0xFFE65100)),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Tạo Mạch Tùy Chỉnh (Debug)',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: sensorIdCtrl,
+                    decoration: InputDecoration(
+                      labelText: 'Mã Mạch (Sensor ID)',
+                      hintText: 'VD: sensor_01, sensor_test',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      prefixIcon: const Icon(Icons.developer_board),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  const Text(
+                    'Chọn mẫu thông số nhanh:',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12.5,
+                      color: Color(0xFF1B5E20),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      ActionChip(
+                        avatar: const Icon(
+                          Icons.check_circle,
+                          color: Colors.green,
+                          size: 16,
+                        ),
+                        label: const Text(
+                          'An toàn',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                        onPressed: () {
+                          setDialogState(() {
+                            temp = 25.0;
+                            humidity = 65.0;
+                            soil = 55.0;
+                            light = 1200.0;
+                          });
+                        },
+                      ),
+                      ActionChip(
+                        avatar: const Icon(
+                          Icons.warning,
+                          color: Colors.orange,
+                          size: 16,
+                        ),
+                        label: const Text(
+                          'Cảnh báo',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                        onPressed: () {
+                          setDialogState(() {
+                            temp = 34.0;
+                            humidity = 40.0;
+                            soil = 32.0;
+                            light = 2700.0;
+                          });
+                        },
+                      ),
+                      ActionChip(
+                        avatar: const Icon(
+                          Icons.error,
+                          color: Colors.red,
+                          size: 16,
+                        ),
+                        label: const Text(
+                          'Red Alert',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
+                          ),
+                        ),
+                        onPressed: () {
+                          setDialogState(() {
+                            temp = 42.0;
+                            humidity = 20.0;
+                            soil = 15.0;
+                            light = 4200.0;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  const Divider(height: 1),
+                  const SizedBox(height: 10),
+
+                  // Nhiệt độ
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Nhiệt độ:',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        '${temp.round()}°C',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: temp > 35
+                              ? Colors.red
+                              : (temp > 32 ? Colors.orange : Colors.green),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Slider(
+                    value: temp,
+                    min: 0,
+                    max: 50,
+                    divisions: 50,
+                    activeColor: temp > 35
+                        ? Colors.red
+                        : (temp > 32 ? Colors.orange : const Color(0xFF2E7D32)),
+                    onChanged: (v) => setDialogState(() => temp = v),
+                  ),
+
+                  // Độ ẩm không khí
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Độ ẩm không khí:',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        '${humidity.round()}%',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2E7D32),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Slider(
+                    value: humidity,
+                    min: 0,
+                    max: 100,
+                    divisions: 100,
+                    activeColor: const Color(0xFF2E7D32),
+                    onChanged: (v) => setDialogState(() => humidity = v),
+                  ),
+
+                  // Độ ẩm đất
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Độ ẩm đất:',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        '${soil.round()}%',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: soil < 20
+                              ? Colors.red
+                              : const Color(0xFF2E7D32),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Slider(
+                    value: soil,
+                    min: 0,
+                    max: 100,
+                    divisions: 100,
+                    activeColor: soil < 20
+                        ? Colors.red
+                        : const Color(0xFF2E7D32),
+                    onChanged: (v) => setDialogState(() => soil = v),
+                  ),
+
+                  // Ánh sáng
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Ánh sáng:',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        '${light.round()} lux',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2E7D32),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Slider(
+                    value: light,
+                    min: 0,
+                    max: 5000,
+                    divisions: 50,
+                    activeColor: const Color(0xFF2E7D32),
+                    onChanged: (v) => setDialogState(() => light = v),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Hủy'),
+              ),
+              FilledButton.icon(
+                onPressed: () async {
+                  final sensorId = sensorIdCtrl.text.trim();
+                  if (sensorId.isEmpty) return;
+                  Navigator.of(ctx).pop();
+
+                  final newSensor = SensorData(
+                    id: sensorId,
+                    temperature: double.parse(temp.toStringAsFixed(1)),
+                    humidity: double.parse(humidity.toStringAsFixed(1)),
+                    soil: double.parse(soil.toStringAsFixed(1)),
+                    light: double.parse(light.toStringAsFixed(1)),
+                  );
+
+                  await rtdbService.addOrUpdateSensor(
+                    uid,
+                    farm.id,
+                    sensorId,
+                    newSensor,
+                  );
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Đã nạp dữ liệu mạch $sensorId!'),
+                        backgroundColor: const Color(0xFF2E7D32),
+                      ),
+                    );
+                  }
+                },
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFFE65100),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                icon: const Icon(Icons.send, size: 16),
+                label: const Text(
+                  'Nạp Dữ Liệu Mạch',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -478,11 +854,13 @@ class _FarmManagementCard extends StatelessWidget {
 // ── Sensor Row ────────────────────────────────────────────────────────────────
 
 class _SensorRow extends StatelessWidget {
+  final String farmId;
   final SensorData sensor;
   final bool isLast;
   final VoidCallback onDelete;
 
   const _SensorRow({
+    required this.farmId,
     required this.sensor,
     required this.isLast,
     required this.onDelete,
@@ -498,9 +876,7 @@ class _SensorRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: status.color.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border(
-          left: BorderSide(color: status.color, width: 3),
-        ),
+        border: Border(left: BorderSide(color: status.color, width: 3)),
       ),
       child: Row(
         children: [
@@ -513,13 +889,21 @@ class _SensorRow extends StatelessWidget {
                 Text(
                   sensor.id,
                   style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 12.5),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12.5,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   '${sensor.temperature}°C  •  ${sensor.humidity}%  •  ${sensor.soil}%  •  ${sensor.light.toStringAsFixed(0)} lux',
-                  style: TextStyle(
-                      fontSize: 11, color: Colors.grey.shade600),
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                ),
+                const SizedBox(height: 6),
+                PlantPresetDropdown(
+                  farmId: farmId,
+                  sensorId: sensor.id,
+                  currentPlantName: sensor.customThresholds?.plantName,
+                  compact: true,
                 ),
               ],
             ),
@@ -533,9 +917,10 @@ class _SensorRow extends StatelessWidget {
             child: Text(
               status.label,
               style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: status.color),
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: status.color,
+              ),
             ),
           ),
           const SizedBox(width: 4),

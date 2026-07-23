@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Xà lách (Mặc định)",
+    "description": "Rau ăn lá phổ biến, cần mát mẻ",
+    "minTemp": 15.0,
+    "maxTemp": 25.0,
+    "minHumidity": 50.0,
+    "maxHumidity": 80.0,
+    "minSoil": 50.0,
+    "maxSoil": 85.0,
+    "minLight": 1000.0,
+    "maxLight": 2000.0
+  },
+  {
+    "name": "Cà chua",
+    "description": "Cây ăn quả, cần nhiều ánh sáng và ấm áp",
+    "minTemp": 18.0,
+    "maxTemp": 32.0,
+    "minHumidity": 40.0,
+    "maxHumidity": 70.0,
+    "minSoil": 40.0,
+    "maxSoil": 75.0,
+    "minLight": 2000.0,
+    "maxLight": 4000.0
+  },
+  {
+    "name": "Dâu tây",
+    "description": "Cây ưa khí hậu lạnh, cần cẩn thận nấm mốc",
+    "minTemp": 10.0,
+    "maxTemp": 28.0,
+    "minHumidity": 60.0,
+    "maxHumidity": 80.0,
+    "minSoil": 50.0,
+    "maxSoil": 80.0,
+    "minLight": 1500.0,
+    "maxLight": 3500.0
+  },
+  {
+    "name": "Hoa Lan (Lan Hồ Điệp)",
+    "description": "Cây ưa bóng râm, độ ẩm cao",
+    "minTemp": 20.0,
+    "maxTemp": 30.0,
+    "minHumidity": 60.0,
+    "maxHumidity": 90.0,
+    "minSoil": 60.0,
+    "maxSoil": 95.0,
+    "minLight": 500.0,
+    "maxLight": 1500.0
+  }
+]

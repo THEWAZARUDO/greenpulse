@@ -19,8 +19,9 @@ class NotificationService {
   Future<void> init() async {
     if (_initialized) return;
 
-    const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const darwinSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
@@ -44,7 +45,8 @@ class NotificationService {
       // Xin quyền thông báo trên Android 13+
       final androidPlatform = _notificationsPlugin
           .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>();
+            AndroidFlutterLocalNotificationsPlugin
+          >();
       if (androidPlatform != null) {
         await androidPlatform.requestNotificationsPermission();
       }
@@ -115,8 +117,7 @@ class NotificationService {
     // Cập nhật mốc thời gian đã gửi thông báo
     _lastNotificationTime = now;
 
-    final isDanger = sensor.overallStatus == StatusLevel.danger;
-    final iconHeader = isDanger ? '🚨 [CẢNH BÁO NGUY HIỂM]' : '⚠️ [CẢNH BÁO]';
+    final iconHeader = '⚠️ [CẢNH BÁO NGUY HIỂM]';
     final advice = sensor.getAiAdviceList().isNotEmpty
         ? sensor.getAiAdviceList().first
         : 'Vui lòng kiểm tra trang trại ngay!';

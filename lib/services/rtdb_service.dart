@@ -28,8 +28,42 @@ class RTDBService {
     });
   }
 
+  /// Lấy toàn bộ sensors của người dùng trên tất cả farms
+  Stream<List<SensorData>> watchAllSensors(String uid) {
+    final ref = _db.ref('sensors/$uid');
+    return ref.onValue.map((event) {
+      final snapshot = event.snapshot;
+      final List<SensorData> allSensors = [];
+      if (!snapshot.exists || snapshot.value == null) {
+        return allSensors;
+      }
+
+      final dataMap = Map<String, dynamic>.from(snapshot.value as Map);
+      dataMap.forEach((farmId, farmData) {
+        if (farmData is Map) {
+          final sensorsMap = Map<String, dynamic>.from(farmData);
+          sensorsMap.forEach((sensorId, sensorValue) {
+            if (sensorValue is Map) {
+              final sensorData = Map<String, dynamic>.from(sensorValue);
+              // Để đơn giản ta lưu tạm farmId vào trường extra nếu cần truy vết
+              sensorData['__farmId'] = farmId.toString();
+              allSensors.add(
+                SensorData.fromMap(sensorData, id: sensorId.toString()),
+              );
+            }
+          });
+        }
+      });
+      return allSensors;
+    });
+  }
+
   /// Lấy 1 sensor cụ thể
-  Stream<SensorData?> watchSingleSensor(String uid, String farmId, String sensorId) {
+  Stream<SensorData?> watchSingleSensor(
+    String uid,
+    String farmId,
+    String sensorId,
+  ) {
     final ref = _db.ref('sensors/$uid/$farmId/$sensorId');
     return ref.onValue.map((event) {
       final snapshot = event.snapshot;
@@ -56,5 +90,16 @@ class RTDBService {
   Future<void> deleteSensor(String uid, String farmId, String sensorId) async {
     final ref = _db.ref('sensors/$uid/$farmId/$sensorId');
     await ref.remove();
+  }
+
+  /// Cập nhật riêng giống cây (plantName) cho một cảm biến
+  Future<void> updateSensorThresholds(
+    String uid,
+    String farmId,
+    String sensorId,
+    SensorThresholds thresholds,
+  ) async {
+    final ref = _db.ref('sensors/$uid/$farmId/$sensorId');
+    await ref.update({'plantName': thresholds.plantName});
   }
 }
