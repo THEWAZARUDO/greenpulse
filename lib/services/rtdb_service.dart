@@ -92,6 +92,12 @@ class RTDBService {
     await ref.remove();
   }
 
+  /// Xóa toàn bộ Cảm biến của một Nông trại
+  Future<void> deleteFarmData(String uid, String farmId) async {
+    final ref = _db.ref('sensors/$uid/$farmId');
+    await ref.remove();
+  }
+
   /// Cập nhật riêng giống cây (plantName) cho một cảm biến
   Future<void> updateSensorThresholds(
     String uid,

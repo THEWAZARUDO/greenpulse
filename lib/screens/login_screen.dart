@@ -265,8 +265,9 @@ class _LoginScreenState extends State<LoginScreen>
                   keyboardType: TextInputType.emailAddress,
                   action: TextInputAction.next,
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty)
+                    if (v == null || v.trim().isEmpty) {
                       return 'Vui lòng nhập email';
+                    }
                     if (!v.contains('@')) return 'Email không hợp lệ';
                     return null;
                   },
@@ -558,8 +559,9 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                       ),
                       validator: (v) {
-                        if (v == null || v.trim().isEmpty)
+                        if (v == null || v.trim().isEmpty) {
                           return 'Vui lòng nhập email';
+                        }
                         if (!v.contains('@')) return 'Email không hợp lệ';
                         return null;
                       },

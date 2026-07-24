@@ -203,10 +203,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                     validator: (v) {
-                      if (v == null || v.isEmpty)
+                      if (v == null || v.isEmpty) {
                         return 'Vui lòng nhập mật khẩu';
-                      if (v.length < 6)
+                      }
+                      if (v.length < 6) {
                         return 'Mật khẩu phải có ít nhất 6 ký tự';
+                      }
                       return null;
                     },
                   ),

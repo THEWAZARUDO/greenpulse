@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
 import '../models/farm_model.dart';
+import 'rtdb_service.dart';
 
 /// Wrap tất cả truy vấn Firestore.
 class FirestoreService {
@@ -83,11 +84,15 @@ class FirestoreService {
 
   /// Xóa nông trại
   Future<void> deleteFarm(String uid, String farmId) async {
+    // 1. Xóa thông tin nông trại trên Firestore
     await _db
         .collection('users')
         .doc(uid)
         .collection('farms')
         .doc(farmId)
         .delete();
+    
+    // 2. Xóa toàn bộ dữ liệu cảm biến của nông trại trên Realtime Database
+    await RTDBService().deleteFarmData(uid, farmId);
   }
 }

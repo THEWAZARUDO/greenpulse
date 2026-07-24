@@ -42,6 +42,7 @@ class PlantPresetDropdown extends StatelessWidget {
             }
 
             return DropdownButton<String>(
+              isDense: true,
               value: currentValue,
               icon: const Icon(
                 Icons.arrow_drop_down,

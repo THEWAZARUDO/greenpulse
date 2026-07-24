@@ -417,18 +417,11 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      shadowColor: Colors.black.withValues(alpha: 0.2),
+      elevation: 2,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -626,6 +619,7 @@ class _ThresholdReferenceCardState extends State<_ThresholdReferenceCard> {
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
+                isDense: true,
                 value: safeSensorId,
                 icon: const Icon(
                   Icons.arrow_drop_down,

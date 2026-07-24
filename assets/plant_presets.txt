@@ -1,50 +1,74 @@
 [
   {
-    "name": "Xà lách (Mặc định)",
-    "description": "Rau ăn lá phổ biến, cần mát mẻ",
-    "minTemp": 15.0,
-    "maxTemp": 25.0,
-    "minHumidity": 50.0,
-    "maxHumidity": 80.0,
-    "minSoil": 50.0,
-    "maxSoil": 85.0,
-    "minLight": 1000.0,
-    "maxLight": 2000.0
-  },
-  {
-    "name": "Cà chua",
-    "description": "Cây ăn quả, cần nhiều ánh sáng và ấm áp",
-    "minTemp": 18.0,
-    "maxTemp": 32.0,
-    "minHumidity": 40.0,
-    "maxHumidity": 70.0,
-    "minSoil": 40.0,
-    "maxSoil": 75.0,
-    "minLight": 2000.0,
-    "maxLight": 4000.0
-  },
-  {
-    "name": "Dâu tây",
-    "description": "Cây ưa khí hậu lạnh, cần cẩn thận nấm mốc",
-    "minTemp": 10.0,
-    "maxTemp": 28.0,
-    "minHumidity": 60.0,
-    "maxHumidity": 80.0,
-    "minSoil": 50.0,
-    "maxSoil": 80.0,
-    "minLight": 1500.0,
-    "maxLight": 3500.0
-  },
-  {
-    "name": "Hoa Lan (Lan Hồ Điệp)",
-    "description": "Cây ưa bóng râm, độ ẩm cao",
-    "minTemp": 20.0,
+    "name": "Cà phê vối",
+    "description": "Tưới kích hoa khi đất khô chạm điểm héo. Kỵ ngập úng.\nCần che bóng.",
+    "minTemp": 24.0,
     "maxTemp": 30.0,
-    "minHumidity": 60.0,
+    "minHumidity": 80.0,
+    "maxHumidity": 85.0,
+    "minSoil": 26.0,
+    "maxSoil": 28.0,
+    "minLight": 70000.0,
+    "maxLight": 80000.0
+  },
+  {
+    "name": "Cà phê chè",
+    "description": "Cần hãm khô tiệm cận điểm héo trong mùa khô mới tưới đợt đầu.\nKhông chịu được úng. Ưa bóng râm mạnh.",
+    "minTemp": 15.0,
+    "maxTemp": 24.0,
+    "minHumidity": 70.0,
+    "maxHumidity": 80.0,
+    "minSoil": 26.0,
+    "maxSoil": 28.0,
+    "minLight": 50000.0,
+    "maxLight": 70000.0
+  },
+  {
+    "name": "Hồ tiêu",
+    "description": "Úng rễ và thối nếu đọng nước >12-24 giờ.\nKỵ nắng trực tiếp, cần trồng dưới tán hoặc trụ sống che bóng.",
+    "minTemp": 18.0,
+    "maxTemp": 27.0,
+    "minHumidity": 70.0,
     "maxHumidity": 90.0,
+    "minSoil": 65.0,
+    "maxSoil": 75.0,
+    "minLight": 20000.0,
+    "maxLight": 30000.0
+  },
+  {
+    "name": "Mắc ca",
+    "description": "Úng rễ và thối nếu đọng nước >12-24 giờ.\nKỵ nắng trực tiếp, cần trồng dưới tán hoặc trụ sống che bóng.",
+    "minTemp": 20.0,
+    "maxTemp": 25.0,
+    "minHumidity": 40.0,
+    "maxHumidity": 60.0,
     "minSoil": 60.0,
-    "maxSoil": 95.0,
-    "minLight": 500.0,
-    "maxLight": 1500.0
+    "maxSoil": 80.0,
+    "minLight": 25000.0,
+    "maxLight": 40000.0
+  },
+  {
+    "name": "Cao su",
+    "description": "Độ ẩm >80% kèm sương có thể gây bệnh\nphấn trắng lá non. Rất kỵ úng. Cần tổng thời gian chiếu sáng lớn.",
+    "minTemp": 25.0,
+    "maxTemp": 28.0,
+    "minHumidity": 75.0,
+    "maxHumidity": 85.0,
+    "minSoil": 60.0,
+    "maxSoil": 80.0,
+    "minLight": 28000.0,
+    "maxLight": 38000.0
+  },
+  {
+    "name": "Điều",
+    "description": "Độ ẩm >80% kèm sương có thể gây bệnh\nphấn trắng lá non. Rất kỵ úng. Cần tổng thời gian chiếu sáng lớn.",
+    "minTemp": 24.0,
+    "maxTemp": 28.0,
+    "minHumidity": 65.0,
+    "maxHumidity": 80.0,
+    "minSoil": 40.0,
+    "maxSoil": 70.0,
+    "minLight": 20000.0,
+    "maxLight": 100000.0
   }
 ]

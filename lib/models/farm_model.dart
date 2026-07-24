@@ -58,14 +58,14 @@ class SensorThresholds {
   factory SensorThresholds.fromMap(Map<String, dynamic> data) {
     return SensorThresholds(
       plantName: (data['name'] ?? data['plantName'])?.toString() ?? 'Mặc định',
-      minTemp: (data['minTemp'] ?? 15.0).toDouble(),
-      maxTemp: (data['maxTemp'] ?? 35.0).toDouble(),
-      minHumidity: (data['minHumidity'] ?? 40.0).toDouble(),
-      maxHumidity: (data['maxHumidity'] ?? 50.0).toDouble(),
-      minSoil: (data['minSoil'] ?? 30.0).toDouble(),
-      maxSoil: (data['maxSoil'] ?? 50.0).toDouble(),
-      minLight: (data['minLight'] ?? 300.0).toDouble(),
-      maxLight: (data['maxLight'] ?? 2800.0).toDouble(),
+      minTemp: (data['minTemp'] as num?)?.toDouble() ?? 15.0,
+      maxTemp: (data['maxTemp'] as num?)?.toDouble() ?? 35.0,
+      minHumidity: (data['minHumidity'] as num?)?.toDouble() ?? 40.0,
+      maxHumidity: (data['maxHumidity'] as num?)?.toDouble() ?? 50.0,
+      minSoil: (data['minSoil'] as num?)?.toDouble() ?? 30.0,
+      maxSoil: (data['maxSoil'] as num?)?.toDouble() ?? 50.0,
+      minLight: (data['minLight'] as num?)?.toDouble() ?? 300.0,
+      maxLight: (data['maxLight'] as num?)?.toDouble() ?? 2800.0,
     );
   }
   Map<String, dynamic> toMap() {

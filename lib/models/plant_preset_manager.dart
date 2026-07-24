@@ -19,12 +19,28 @@ class PlantPresetManager {
       _presets.clear();
       _presets.addAll(
         data.map(
-          (item) => SensorThresholds.fromMap(item as Map<String, dynamic>),
+          (item) => SensorThresholds.fromMap(
+            Map<String, dynamic>.from(item as Map),
+          ),
         ),
       );
     } catch (e) {
-      // Nếu file lỗi hoặc không tồn tại, in ra log để debug
       debugPrint('Lỗi khi tải plant_presets.txt: $e');
+      if (_presets.isEmpty) {
+        _presets.add(
+          const SensorThresholds(
+            plantName: 'Cà phê vối',
+            minTemp: 24.0,
+            maxTemp: 30.0,
+            minHumidity: 80.0,
+            maxHumidity: 85.0,
+            minSoil: 26.0,
+            maxSoil: 28.0,
+            minLight: 1000.0,
+            maxLight: 2000.0,
+          ),
+        );
+      }
     }
   }
 
