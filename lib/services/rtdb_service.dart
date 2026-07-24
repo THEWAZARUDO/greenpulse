@@ -6,12 +6,21 @@ import '../services/notification_service.dart';
 class RTDBService {
   final FirebaseDatabase _db = FirebaseDatabase.instance;
 
-  /// Stream dữ liệu của các sensors trong 1 farm từ Realtime Database,
-  /// tự động ENRICH dữ liệu qua AI Service (hoặc Offline Fallback Evaluator) SONG SONG (Future.wait)
-  /// và phát Push Notification nếu phát hiện nguy hiểm/cảnh báo.
+  // Shared Broadcast Stream Cache: Đảm bảo cả 4 Tab chỉ chia sẻ duy nhất 1 Stream kết nối tới RTDB per Farm
+  static final Map<String, Stream<List<SensorData>>> _sensorStreamsCache = {};
+  static final Map<String, Stream<List<SensorData>>> _allSensorsStreamsCache = {};
+  static final Map<String, Stream<SensorData?>> _singleSensorStreamsCache = {};
+
+  /// Stream dữ liệu của các sensors trong 1 farm từ Realtime Database.
+  /// Sử dụng Shared Broadcast Stream Cache để loại bỏ 100% việc tạo Stream và gọi AI đúp giữa các Tab.
   Stream<List<SensorData>> watchSensors(String uid, String farmId, {String farmName = 'Nông trại'}) {
+    final cacheKey = '${uid}_$farmId';
+    if (_sensorStreamsCache.containsKey(cacheKey)) {
+      return _sensorStreamsCache[cacheKey]!;
+    }
+
     final ref = _db.ref('sensors/$uid/$farmId');
-    return ref.onValue.asyncMap((event) async {
+    final stream = ref.onValue.asyncMap((event) async {
       final snapshot = event.snapshot;
       if (!snapshot.exists || snapshot.value == null) {
         return <SensorData>[];
@@ -44,13 +53,21 @@ class RTDBService {
       );
 
       return enrichedSensors;
-    });
+    }).asBroadcastStream();
+
+    _sensorStreamsCache[cacheKey] = stream;
+    return stream;
   }
 
-  /// Lấy toàn bộ sensors của người dùng trên tất cả farms (đã qua ENRICH AI song song)
+  /// Lấy toàn bộ sensors của người dùng trên tất cả farms (đã qua Broadcast Stream Cache)
   Stream<List<SensorData>> watchAllSensors(String uid) {
+    final cacheKey = 'all_$uid';
+    if (_allSensorsStreamsCache.containsKey(cacheKey)) {
+      return _allSensorsStreamsCache[cacheKey]!;
+    }
+
     final ref = _db.ref('sensors/$uid');
-    return ref.onValue.asyncMap((event) async {
+    final stream = ref.onValue.asyncMap((event) async {
       final snapshot = event.snapshot;
       final List<SensorData> allSensors = [];
       if (!snapshot.exists || snapshot.value == null) {
@@ -81,7 +98,10 @@ class RTDBService {
       );
 
       return enrichedSensors;
-    });
+    }).asBroadcastStream();
+
+    _allSensorsStreamsCache[cacheKey] = stream;
+    return stream;
   }
 
   /// Lấy 1 sensor cụ thể
@@ -90,8 +110,13 @@ class RTDBService {
     String farmId,
     String sensorId,
   ) {
+    final cacheKey = '${uid}_${farmId}_$sensorId';
+    if (_singleSensorStreamsCache.containsKey(cacheKey)) {
+      return _singleSensorStreamsCache[cacheKey]!;
+    }
+
     final ref = _db.ref('sensors/$uid/$farmId/$sensorId');
-    return ref.onValue.asyncMap((event) async {
+    final stream = ref.onValue.asyncMap((event) async {
       final snapshot = event.snapshot;
       if (!snapshot.exists || snapshot.value == null) {
         return null;
@@ -100,7 +125,17 @@ class RTDBService {
       final rawSensor = SensorData.fromMap(dataMap, id: sensorId);
       final aiResult = await AiApiService.evaluateSensor(rawSensor);
       return rawSensor.copyWith(aiEvaluation: aiResult);
-    });
+    }).asBroadcastStream();
+
+    _singleSensorStreamsCache[cacheKey] = stream;
+    return stream;
+  }
+
+  /// Xóa cache stream khi người dùng đăng xuất hoặc cấu hình lại
+  static void clearStreamCache() {
+    _sensorStreamsCache.clear();
+    _allSensorsStreamsCache.clear();
+    _singleSensorStreamsCache.clear();
   }
 
   /// Thêm hoặc Cập nhật Cảm biến
