@@ -313,7 +313,9 @@ class _AlertCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        adviceList.first,
+                        adviceList.isNotEmpty
+                            ? adviceList.first
+                            : 'Tất cả chỉ số đang ở mức an toàn.',
                         style: const TextStyle(
                           fontSize: 12,
                           color: Color(0xFF1B5E20),

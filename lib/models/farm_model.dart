@@ -174,7 +174,12 @@ class SensorData {
   StatusLevel get overallStatus =>
       aiEvaluation?.overallStatus ?? StatusLevel.normal;
 
-  List<String> get adviceList => aiEvaluation?.adviceList ?? [];
+  List<String> get adviceList {
+    if (aiEvaluation != null && aiEvaluation!.adviceList.isNotEmpty) {
+      return aiEvaluation!.adviceList;
+    }
+    return const ['Tất cả các chỉ số cảm biến đang ở mức an toàn.'];
+  }
 }
 
 class FarmModel {

@@ -32,13 +32,13 @@ class PlantPresetManager {
 
   static CropModel? getCropById(String? cropId) {
     if (_crops.isEmpty) return null;
-    if (cropId == null || cropId.isEmpty) return _crops.first;
+    if (cropId == null || cropId.isEmpty) return _crops.isNotEmpty ? _crops.first : null;
     try {
       return _crops.firstWhere(
         (c) => c.cropId == cropId || c.cropName.toLowerCase() == cropId.toLowerCase(),
       );
     } catch (_) {
-      return _crops.first;
+      return _crops.isNotEmpty ? _crops.first : null;
     }
   }
 
