@@ -5,6 +5,7 @@ import '../../models/farm_model.dart';
 import '../../widgets/plant_preset_dropdown.dart';
 import '../../services/firestore_service.dart';
 import '../../services/rtdb_service.dart';
+import '../../services/ai_api_service.dart';
 
 class AlertsTab extends StatefulWidget {
   const AlertsTab({super.key});
@@ -257,6 +258,9 @@ class _AlertCard extends StatelessWidget {
                       color: Color(0xFF1B5E20),
                     ),
                   ),
+                  const Spacer(),
+                  //Debug function: Nhãn báo trạng thái AI Server (Online 🟢 vs Offline 🟡)
+                  _buildAiServerStatusBadge(sensor.aiEvaluation?.isOfflineFallback ?? true),
                 ],
               ),
               const SizedBox(height: 8),
@@ -356,3 +360,59 @@ class _AlertCard extends StatelessWidget {
     );
   }
 }
+
+//Debug function: Widget hiển thị nhãn nhận biết trạng thái kết nối Server AI (Online 🟢 vs Offline 🟡 vs Waking Up ⏳)
+Widget _buildAiServerStatusBadge(bool isOffline) {
+  final isWakingUp = AiApiService.isWakingUp && isOffline;
+  final color = isWakingUp
+      ? const Color(0xFF0288D1)
+      : (isOffline ? const Color(0xFFF57C00) : const Color(0xFF2E7D32));
+  final bgColor = isWakingUp
+      ? const Color(0xFFE1F5FE)
+      : (isOffline ? const Color(0xFFFFF3E0) : const Color(0xFFE8F5E9));
+  final borderColor = isWakingUp
+      ? const Color(0xFF81D4FA)
+      : (isOffline ? const Color(0xFFFFB74D) : const Color(0xFF81C784));
+  final labelText = isWakingUp
+      ? 'Render đang dậy...'
+      : (isOffline ? 'Offline' : 'AI Online');
+
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+    decoration: BoxDecoration(
+      color: bgColor,
+      borderRadius: BorderRadius.circular(6),
+      border: Border.all(color: borderColor),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (isWakingUp)
+          const SizedBox(
+            width: 8,
+            height: 8,
+            child: CircularProgressIndicator(
+              strokeWidth: 1.5,
+              color: Color(0xFF0288D1),
+            ),
+          )
+        else
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+          ),
+        const SizedBox(width: 4),
+        Text(
+          labelText,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+

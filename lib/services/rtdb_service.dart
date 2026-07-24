@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import '../models/farm_model.dart';
 import '../services/ai_api_service.dart';
@@ -12,18 +13,30 @@ class RTDBService {
   static final Map<String, Stream<SensorData?>> _singleSensorStreamsCache = {};
 
   /// Stream dữ liệu của các sensors trong 1 farm từ Realtime Database.
-  /// Sử dụng Shared Broadcast Stream Cache để loại bỏ 100% việc tạo Stream và gọi AI đúp giữa các Tab.
+  /// Sử dụng Fast-Path 0ms để hiển thị dữ liệu tức thì, làm giàu dữ liệu bất đồng bộ không chặn UI.
   Stream<List<SensorData>> watchSensors(String uid, String farmId, {String farmName = 'Nông trại'}) {
     final cacheKey = '${uid}_$farmId';
     if (_sensorStreamsCache.containsKey(cacheKey)) {
       return _sensorStreamsCache[cacheKey]!;
     }
 
+    final controller = StreamController<List<SensorData>>.broadcast();
     final ref = _db.ref('sensors/$uid/$farmId');
-    final stream = ref.onValue.asyncMap((event) async {
+    List<SensorData> lastRawSensors = [];
+
+    // Lắng nghe sự kiện khi Render.com thức dậy hoặc AI API hoàn thành để tự động refresh UI
+    final refreshSub = AiApiService.onRefreshNeeded.listen((_) {
+      if (!controller.isClosed && lastRawSensors.isNotEmpty) {
+        final enriched = lastRawSensors.map((raw) => AiApiService.evaluateFast(raw)).toList();
+        controller.add(enriched);
+      }
+    });
+
+    final subscription = ref.onValue.listen((event) {
       final snapshot = event.snapshot;
       if (!snapshot.exists || snapshot.value == null) {
-        return <SensorData>[];
+        if (!controller.isClosed) controller.add(<SensorData>[]);
+        return;
       }
 
       final dataMap = Map<String, dynamic>.from(snapshot.value as Map);
@@ -36,25 +49,49 @@ class RTDBService {
         }
       });
 
-      // ENRICH SONG SONG (Parallel Execution via Future.wait)
-      final enrichedSensors = await Future.wait(
-        rawSensors.map((rawSensor) async {
-          final aiResult = await AiApiService.evaluateSensor(rawSensor);
-          final enriched = rawSensor.copyWith(aiEvaluation: aiResult);
+      lastRawSensors = rawSensors;
 
-          if (enriched.overallStatus != StatusLevel.normal) {
-            NotificationService().processSensorAlerts(
-              farmName,
-              enriched,
-            );
+      // 1. FAST-PATH TỨC THÌ (0.0ms): Phát ngay lập tức lên UI không chờ bất kỳ cái gì!
+      final fastSensors = rawSensors.map((raw) {
+        final enriched = AiApiService.evaluateFast(raw);
+        if (enriched.overallStatus != StatusLevel.normal) {
+          NotificationService().processSensorAlerts(farmName, enriched);
+        }
+        return enriched;
+      }).toList();
+
+      if (!controller.isClosed) {
+        controller.add(fastSensors);
+      }
+
+      // 2. BACKGROUND AI ENRICHMENT (Không await, chạy độc lập phía sau)
+      final needsAiQuery = rawSensors.any((raw) => !AiApiService.hasValidCache(raw));
+      if (needsAiQuery) {
+        Future.wait(
+          rawSensors.map((rawSensor) async {
+            final aiResult = await AiApiService.evaluateSensor(rawSensor);
+            final enriched = rawSensor.copyWith(aiEvaluation: aiResult);
+
+            if (enriched.overallStatus != StatusLevel.normal) {
+              NotificationService().processSensorAlerts(farmName, enriched);
+            }
+            return enriched;
+          }),
+        ).then((enrichedSensors) {
+          if (!controller.isClosed) {
+            controller.add(enrichedSensors);
           }
-          return enriched;
-        }),
-      );
+        });
+      }
+    });
 
-      return enrichedSensors;
-    }).asBroadcastStream();
+    controller.onCancel = () {
+      subscription.cancel();
+      refreshSub.cancel();
+      _sensorStreamsCache.remove(cacheKey);
+    };
 
+    final stream = controller.stream;
     _sensorStreamsCache[cacheKey] = stream;
     return stream;
   }
@@ -66,12 +103,23 @@ class RTDBService {
       return _allSensorsStreamsCache[cacheKey]!;
     }
 
+    final controller = StreamController<List<SensorData>>.broadcast();
     final ref = _db.ref('sensors/$uid');
-    final stream = ref.onValue.asyncMap((event) async {
+    List<SensorData> lastRawSensors = [];
+
+    final refreshSub = AiApiService.onRefreshNeeded.listen((_) {
+      if (!controller.isClosed && lastRawSensors.isNotEmpty) {
+        final enriched = lastRawSensors.map((raw) => AiApiService.evaluateFast(raw)).toList();
+        controller.add(enriched);
+      }
+    });
+
+    final subscription = ref.onValue.listen((event) {
       final snapshot = event.snapshot;
       final List<SensorData> allSensors = [];
       if (!snapshot.exists || snapshot.value == null) {
-        return allSensors;
+        if (!controller.isClosed) controller.add(allSensors);
+        return;
       }
 
       final dataMap = Map<String, dynamic>.from(snapshot.value as Map);
@@ -90,16 +138,37 @@ class RTDBService {
         }
       });
 
-      final enrichedSensors = await Future.wait(
-        rawSensors.map((rawSensor) async {
-          final aiResult = await AiApiService.evaluateSensor(rawSensor);
-          return rawSensor.copyWith(aiEvaluation: aiResult);
-        }),
-      );
+      lastRawSensors = rawSensors;
 
-      return enrichedSensors;
-    }).asBroadcastStream();
+      // 1. FAST-PATH (0ms)
+      final fastSensors = rawSensors.map((raw) => AiApiService.evaluateFast(raw)).toList();
+      if (!controller.isClosed) {
+        controller.add(fastSensors);
+      }
 
+      // 2. BACKGROUND AI ENRICHMENT (Un-awaited)
+      final needsAiQuery = rawSensors.any((raw) => !AiApiService.hasValidCache(raw));
+      if (needsAiQuery) {
+        Future.wait(
+          rawSensors.map((rawSensor) async {
+            final aiResult = await AiApiService.evaluateSensor(rawSensor);
+            return rawSensor.copyWith(aiEvaluation: aiResult);
+          }),
+        ).then((enrichedSensors) {
+          if (!controller.isClosed) {
+            controller.add(enrichedSensors);
+          }
+        });
+      }
+    });
+
+    controller.onCancel = () {
+      subscription.cancel();
+      refreshSub.cancel();
+      _allSensorsStreamsCache.remove(cacheKey);
+    };
+
+    final stream = controller.stream;
     _allSensorsStreamsCache[cacheKey] = stream;
     return stream;
   }
@@ -115,18 +184,51 @@ class RTDBService {
       return _singleSensorStreamsCache[cacheKey]!;
     }
 
+    final controller = StreamController<SensorData?>.broadcast();
     final ref = _db.ref('sensors/$uid/$farmId/$sensorId');
-    final stream = ref.onValue.asyncMap((event) async {
+    SensorData? lastRawSensor;
+
+    final refreshSub = AiApiService.onRefreshNeeded.listen((_) {
+      if (!controller.isClosed && lastRawSensor != null) {
+        final enriched = AiApiService.evaluateFast(lastRawSensor!);
+        controller.add(enriched);
+      }
+    });
+
+    final subscription = ref.onValue.listen((event) {
       final snapshot = event.snapshot;
       if (!snapshot.exists || snapshot.value == null) {
-        return null;
+        if (!controller.isClosed) controller.add(null);
+        return;
       }
       final dataMap = Map<String, dynamic>.from(snapshot.value as Map);
       final rawSensor = SensorData.fromMap(dataMap, id: sensorId);
-      final aiResult = await AiApiService.evaluateSensor(rawSensor);
-      return rawSensor.copyWith(aiEvaluation: aiResult);
-    }).asBroadcastStream();
+      lastRawSensor = rawSensor;
 
+      // 1. FAST-PATH (0ms)
+      final fastSensor = AiApiService.evaluateFast(rawSensor);
+      if (!controller.isClosed) {
+        controller.add(fastSensor);
+      }
+
+      // 2. BACKGROUND AI ENRICHMENT (Un-awaited)
+      if (!AiApiService.hasValidCache(rawSensor)) {
+        AiApiService.evaluateSensor(rawSensor).then((aiResult) {
+          final enriched = rawSensor.copyWith(aiEvaluation: aiResult);
+          if (!controller.isClosed) {
+            controller.add(enriched);
+          }
+        });
+      }
+    });
+
+    controller.onCancel = () {
+      subscription.cancel();
+      refreshSub.cancel();
+      _singleSensorStreamsCache.remove(cacheKey);
+    };
+
+    final stream = controller.stream;
     _singleSensorStreamsCache[cacheKey] = stream;
     return stream;
   }

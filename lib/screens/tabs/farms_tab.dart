@@ -552,7 +552,7 @@ class _FarmManagementCard extends StatelessWidget {
     double temp = 28.0;
     double humidity = 65.0;
     double soil = 50.0;
-    double light = 1200.0;
+    double light = 20000.0;
 
     showDialog(
       context: context,
@@ -619,7 +619,7 @@ class _FarmManagementCard extends StatelessWidget {
                             temp = 25.0;
                             humidity = 65.0;
                             soil = 55.0;
-                            light = 1200.0;
+                            light = 20000.0;
                           });
                         },
                       ),
@@ -638,7 +638,7 @@ class _FarmManagementCard extends StatelessWidget {
                             temp = 34.0;
                             humidity = 40.0;
                             soil = 32.0;
-                            light = 2700.0;
+                            light = 50000.0;
                           });
                         },
                       ),
@@ -661,7 +661,7 @@ class _FarmManagementCard extends StatelessWidget {
                             temp = 42.0;
                             humidity = 20.0;
                             soil = 15.0;
-                            light = 4200.0;
+                            light = 90000.0;
                           });
                         },
                       ),
@@ -789,8 +789,8 @@ class _FarmManagementCard extends StatelessWidget {
                   Slider(
                     value: light,
                     min: 0,
-                    max: 5000,
-                    divisions: 50,
+                    max: 120000,
+                    divisions: 10000,
                     activeColor: const Color(0xFF2E7D32),
                     onChanged: (v) => setDialogState(() => light = v),
                   ),

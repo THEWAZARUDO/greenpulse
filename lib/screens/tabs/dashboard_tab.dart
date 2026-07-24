@@ -5,6 +5,7 @@ import '../../models/user_model.dart';
 import '../../models/plant_preset_manager.dart';
 import '../../services/firestore_service.dart';
 import '../../services/rtdb_service.dart';
+import '../../services/ai_api_service.dart';
 
 class DashboardTab extends StatelessWidget {
   const DashboardTab({super.key});
@@ -451,7 +452,7 @@ class _FarmDashboardCard extends StatelessWidget {
 
               return Column(
                 children: sensors
-                    .map((s) => _SensorMetricsView(sensor: s))
+                    .map((s) => _SensorMetricsView(farmId: farm.id, sensor: s))
                     .toList(),
               );
             },
@@ -465,9 +466,10 @@ class _FarmDashboardCard extends StatelessWidget {
 // ── Sensor Metrics View ───────────────────────────────────────────────────────
 
 class _SensorMetricsView extends StatelessWidget {
+  final String farmId;
   final SensorData sensor;
 
-  const _SensorMetricsView({required this.sensor});
+  const _SensorMetricsView({required this.farmId, required this.sensor});
 
   @override
   Widget build(BuildContext context) {
@@ -511,6 +513,15 @@ class _SensorMetricsView extends StatelessWidget {
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
+              //Debug function: Nút giả lập đổi dữ liệu cảm biến ESP32 trực tiếp trên Dashboard
+              IconButton(
+                icon: const Icon(Icons.tune, size: 16, color: Color(0xFFE65100)),
+                tooltip: 'Giả lập đổi dữ liệu ESP32',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                onPressed: () => _showEditSensorDataDebugDialog(context, farmId, sensor),
+              ),
               const Spacer(),
               _StatusBadge(status: overall),
             ],
@@ -523,12 +534,14 @@ class _SensorMetricsView extends StatelessWidget {
               final crop = PlantPresetManager.getCropById(sensor.cropId);
               final stage = crop?.getStageById(sensor.stageId);
               final maxLux = (stage?.luxMax ?? 100000.0) <= 0 ? 100000.0 : stage!.luxMax;
+              final screenWidth = MediaQuery.of(context).size.width;
+              final dynamicRatio = screenWidth < 380 ? 1.58 : 1.70;
 
               return GridView.count(
                 crossAxisCount: 2,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                childAspectRatio: 1.9,
+                childAspectRatio: dynamicRatio,
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
                 children: [
@@ -596,15 +609,15 @@ class _SensorMetricsView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.psychology_outlined,
                       size: 16,
                       color: Color(0xFF2E7D32),
                     ),
-                    SizedBox(width: 6),
-                    Text(
+                    const SizedBox(width: 6),
+                    const Text(
                       'Đánh giá & Khuyến nghị AI',
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
@@ -612,6 +625,9 @@ class _SensorMetricsView extends StatelessWidget {
                         color: Color(0xFF1B5E20),
                       ),
                     ),
+                    const Spacer(),
+                    //Debug function: Nhãn báo trạng thái AI Server (Online 🟢 vs Offline 🟡)
+                    _buildAiServerStatusBadge(sensor.aiEvaluation?.isOfflineFallback ?? true),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -706,14 +722,17 @@ class _MetricTile extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, size: 14, color: status.color),
-              const SizedBox(width: 5),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.grey.shade600,
-                  fontWeight: FontWeight.w500,
+              Icon(icon, size: 13, color: status.color),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
@@ -741,3 +760,278 @@ class _MetricTile extends StatelessWidget {
     );
   }
 }
+
+//Debug function: Widget hiển thị nhãn nhận biết trạng thái kết nối Server AI (Online 🟢 vs Offline 🟡 vs Waking Up ⏳)
+Widget _buildAiServerStatusBadge(bool isOffline) {
+  final isWakingUp = AiApiService.isWakingUp && isOffline;
+  final color = isWakingUp
+      ? const Color(0xFF0288D1)
+      : (isOffline ? const Color(0xFFF57C00) : const Color(0xFF2E7D32));
+  final bgColor = isWakingUp
+      ? const Color(0xFFE1F5FE)
+      : (isOffline ? const Color(0xFFFFF3E0) : const Color(0xFFE8F5E9));
+  final borderColor = isWakingUp
+      ? const Color(0xFF81D4FA)
+      : (isOffline ? const Color(0xFFFFB74D) : const Color(0xFF81C784));
+  final labelText = isWakingUp
+      ? 'Render đang dậy...'
+      : (isOffline ? 'Offline' : 'AI Online');
+
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+    decoration: BoxDecoration(
+      color: bgColor,
+      borderRadius: BorderRadius.circular(6),
+      border: Border.all(color: borderColor),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (isWakingUp)
+          const SizedBox(
+            width: 8,
+            height: 8,
+            child: CircularProgressIndicator(
+              strokeWidth: 1.5,
+              color: Color(0xFF0288D1),
+            ),
+          )
+        else
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+          ),
+        const SizedBox(width: 4),
+        Text(
+          labelText,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+//Debug function: Dialog giả lập thay đổi dữ liệu thông số cảm biến ESP32
+void _showEditSensorDataDebugDialog(
+  BuildContext context,
+  String farmId,
+  SensorData sensor,
+) {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return;
+
+  double temp = sensor.temperature;
+  double humidity = sensor.humidity;
+  double soil = sensor.soil;
+  double light = sensor.light;
+  double ph = sensor.ph;
+
+  showDialog(
+    context: context,
+    builder: (ctx) => StatefulBuilder(
+      builder: (context, setDialogState) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              const Icon(Icons.tune, color: Color(0xFFE65100)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Giả lập đổi dữ liệu ${sensor.id}',
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Chọn nhanh mẫu thông số:',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  children: [
+                    ActionChip(
+                      label: const Text(
+                        'An toàn',
+                        style: TextStyle(fontSize: 11),
+                      ),
+                      onPressed: () => setDialogState(() {
+                        temp = 25.0;
+                        humidity = 65.0;
+                        soil = 60.0;
+                        light = 1200.0;
+                        ph = 6.5;
+                      }),
+                    ),
+                    ActionChip(
+                      label: const Text(
+                        'Cảnh báo',
+                        style: TextStyle(fontSize: 11),
+                      ),
+                      onPressed: () => setDialogState(() {
+                        temp = 33.0;
+                        humidity = 45.0;
+                        soil = 35.0;
+                        light = 2500.0;
+                        ph = 5.2;
+                      }),
+                    ),
+                    ActionChip(
+                      label: const Text(
+                        'Red Alert',
+                        style: TextStyle(fontSize: 11, color: Colors.red),
+                      ),
+                      onPressed: () => setDialogState(() {
+                        temp = 42.0;
+                        humidity = 20.0;
+                        soil = 15.0;
+                        light = 4500.0;
+                        ph = 4.5;
+                      }),
+                    ),
+                  ],
+                ),
+                const Divider(height: 16),
+
+                // Nhiệt độ
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Nhiệt độ (°C):',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    Text(
+                      '${temp.toStringAsFixed(1)}°C',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                Slider(
+                  value: temp.clamp(0.0, 50.0),
+                  min: 0,
+                  max: 50,
+                  divisions: 50,
+                  onChanged: (v) => setDialogState(() => temp = v),
+                ),
+
+                // Độ ẩm không khí
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Độ ẩm KK (%):',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    Text(
+                      '${humidity.toStringAsFixed(1)}%',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                Slider(
+                  value: humidity.clamp(0.0, 100.0),
+                  min: 0,
+                  max: 100,
+                  divisions: 100,
+                  onChanged: (v) => setDialogState(() => humidity = v),
+                ),
+
+                // Độ ẩm đất
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Độ ẩm đất (%):',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    Text(
+                      '${soil.toStringAsFixed(1)}%',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                Slider(
+                  value: soil.clamp(0.0, 100.0),
+                  min: 0,
+                  max: 100,
+                  divisions: 100,
+                  onChanged: (v) => setDialogState(() => soil = v),
+                ),
+
+                // Ánh sáng
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Ánh sáng (lux):',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    Text(
+                      '${light.toStringAsFixed(0)} lux',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                Slider(
+                  value: light.clamp(0.0, 100000.0),
+                  min: 0,
+                  max: 100000,
+                  divisions: 100,
+                  onChanged: (v) => setDialogState(() => light = v),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Hủy'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFE65100),
+              ),
+              onPressed: () async {
+                Navigator.pop(ctx);
+                final updated = sensor.copyWith(
+                  temperature: temp,
+                  humidity: humidity,
+                  soil: soil,
+                  light: light,
+                  ph: ph,
+                );
+                await RTDBService().addOrUpdateSensor(
+                  user.uid,
+                  farmId,
+                  sensor.id,
+                  updated,
+                );
+              },
+              child: const Text('Cập nhật dữ liệu ESP'),
+            ),
+          ],
+        );
+      },
+    ),
+  );
+}
+
+
