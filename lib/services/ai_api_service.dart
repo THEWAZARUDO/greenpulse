@@ -11,7 +11,7 @@ class AiApiService {
 
   // Mặc định URL API AI khi test local / Android Emulator hoặc Cloud VPS
   // Khi deploy lên Cloud (Render/Railway), hãy thay URL tại đây.
-  static String baseUrl = 'http://10.0.2.2:8000'; // Android emulator localhost
+  static String baseUrl = 'https://greenpulse-ai-26gw.onrender.com'; // Android emulator localhost
 
   /// Gửi dữ liệu cảm biến tới Python Fuzzy AI Service.
   /// Nếu API đang Sleep (Timeout > 4s hoặc lỗi mạng), tự động chuyển sang Offline Fallback Evaluator.
