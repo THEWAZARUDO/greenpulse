@@ -98,14 +98,15 @@ class RTDBService {
     await ref.remove();
   }
 
-  /// Cập nhật riêng giống cây (plantName) cho một cảm biến
-  Future<void> updateSensorThresholds(
+  /// Cập nhật loại cây (cropId) và giai đoạn sinh trưởng (stageId) cho một cảm biến
+  Future<void> updateSensorCropAndStage(
     String uid,
     String farmId,
     String sensorId,
-    SensorThresholds thresholds,
-  ) async {
+    String cropId, {
+    int stageId = 1,
+  }) async {
     final ref = _db.ref('sensors/$uid/$farmId/$sensorId');
-    await ref.update({'plantName': thresholds.plantName});
+    await ref.update({'cropId': cropId, 'stageId': stageId});
   }
 }

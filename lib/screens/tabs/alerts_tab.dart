@@ -154,7 +154,7 @@ class _AlertCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final status = sensor.overallStatus;
-    final adviceList = sensor.getAiAdviceList();
+    final adviceList = sensor.adviceList;
     final isAllGood = status == StatusLevel.normal;
 
     return Container(
@@ -343,7 +343,7 @@ class _AlertCard extends StatelessWidget {
                 PlantPresetDropdown(
                   farmId: farm.id,
                   sensorId: sensor.id,
-                  currentPlantName: sensor.customThresholds?.plantName,
+                  currentCropId: sensor.cropId,
                 ),
               ],
             ),

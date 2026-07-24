@@ -118,8 +118,8 @@ class NotificationService {
     _lastNotificationTime = now;
 
     final iconHeader = '⚠️ [CẢNH BÁO NGUY HIỂM]';
-    final advice = sensor.getAiAdviceList().isNotEmpty
-        ? sensor.getAiAdviceList().first
+    final advice = sensor.adviceList.isNotEmpty
+        ? sensor.adviceList.first
         : 'Vui lòng kiểm tra trang trại ngay!';
 
     final title = '$iconHeader $farmName';

@@ -895,14 +895,14 @@ class _SensorRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${sensor.temperature}°C  •  ${sensor.humidity}%  •  ${sensor.soil}%  •  ${sensor.light.toStringAsFixed(0)} lux',
+                  'pH ${sensor.ph}  •  ${sensor.temperature}°C  •  ${sensor.humidity}%  •  ${sensor.soil}%  •  ${sensor.light.toStringAsFixed(0)} lux',
                   style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 6),
                 PlantPresetDropdown(
                   farmId: farmId,
                   sensorId: sensor.id,
-                  currentPlantName: sensor.customThresholds?.plantName,
+                  currentCropId: sensor.cropId,
                   compact: true,
                 ),
               ],

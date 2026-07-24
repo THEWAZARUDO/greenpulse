@@ -599,15 +599,11 @@ class _ThresholdReferenceCardState extends State<_ThresholdReferenceCard> {
           orElse: () => sensors.first,
         );
 
-        final currentPlantName = selectedSensor.customThresholds?.plantName;
-        final selectedPreset = currentPlantName != null
-            ? PlantPresetManager.getPresetByName(currentPlantName)
-            : (PlantPresetManager.presets.isNotEmpty
-                  ? PlantPresetManager.presets.first
-                  : null);
+        final crop = PlantPresetManager.getCropById(selectedSensor.cropId);
+        final stage = crop?.getStageById(selectedSensor.stageId);
 
         return _SectionCard(
-          title: 'Ngưỡng an toàn cây trồng',
+          title: 'Ngưỡng tối ưu AI Mờ (Fuzzy Logic)',
           icon: Icons.tune_outlined,
           titleTrailing: Container(
             height: 28,
@@ -632,7 +628,6 @@ class _ThresholdReferenceCardState extends State<_ThresholdReferenceCard> {
                   color: Color(0xFF1B5E20),
                 ),
                 items: sensors.map((sensor) {
-                  // Giới hạn độ dài text dropdown
                   String display = sensor.id;
                   if (display.length > 10) {
                     display = '${display.substring(0, 10)}...';
@@ -648,11 +643,11 @@ class _ThresholdReferenceCardState extends State<_ThresholdReferenceCard> {
               ),
             ),
           ),
-          children: selectedPreset == null
+          children: (crop == null || stage == null)
               ? [
                   const Padding(
                     padding: EdgeInsets.all(16.0),
-                    child: Text('Không có dữ liệu giống cây'),
+                    child: Text('Không có dữ liệu loại cây'),
                   ),
                 ]
               : [
@@ -662,7 +657,7 @@ class _ThresholdReferenceCardState extends State<_ThresholdReferenceCard> {
                       vertical: 8,
                     ),
                     child: Text(
-                      'Đang hiển thị cho: ${selectedPreset.plantName}',
+                      'Cây: ${crop.cropName} • Giai đoạn: ${stage.stageName}',
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -671,31 +666,33 @@ class _ThresholdReferenceCardState extends State<_ThresholdReferenceCard> {
                     ),
                   ),
                   _ThresholdRow(
+                    icon: Icons.science_outlined,
+                    label: 'Độ pH đất an toàn',
+                    value: '${crop.soilPhMin} – ${crop.soilPhMax} pH',
+                    color: const Color(0xFF8E24AA),
+                  ),
+                  _ThresholdRow(
                     icon: Icons.thermostat_outlined,
                     label: 'Nhiệt độ tối ưu',
-                    value:
-                        '${selectedPreset.minTemp} – ${selectedPreset.maxTemp} °C',
+                    value: '${stage.tempMin} – ${stage.tempMax} °C',
                     color: const Color(0xFFEF5350),
                   ),
                   _ThresholdRow(
                     icon: Icons.water_drop_outlined,
                     label: 'Độ ẩm không khí',
-                    value:
-                        '${selectedPreset.minHumidity} – ${selectedPreset.maxHumidity} %',
+                    value: '${stage.airHumidityMin} – ${stage.airHumidityMax} %',
                     color: const Color(0xFF42A5F5),
                   ),
                   _ThresholdRow(
                     icon: Icons.grass_outlined,
                     label: 'Độ ẩm đất tối ưu',
-                    value:
-                        '${selectedPreset.minSoil} – ${selectedPreset.maxSoil} %',
+                    value: '${stage.soilMoistureMin} – ${stage.soilMoistureMax} %',
                     color: const Color(0xFF8D6E63),
                   ),
                   _ThresholdRow(
                     icon: Icons.wb_sunny_outlined,
                     label: 'Ánh sáng tối ưu',
-                    value:
-                        '${selectedPreset.minLight} – ${selectedPreset.maxLight} lux',
+                    value: '${stage.luxMin} – ${stage.luxMax} lux',
                     color: const Color(0xFFFFA726),
                   ),
                 ],

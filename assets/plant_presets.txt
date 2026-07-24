@@ -1,74 +1,218 @@
-[
-  {
-    "name": "Cà phê vối",
-    "description": "Tưới kích hoa khi đất khô chạm điểm héo. Kỵ ngập úng.\nCần che bóng.",
-    "minTemp": 24.0,
-    "maxTemp": 30.0,
-    "minHumidity": 80.0,
-    "maxHumidity": 85.0,
-    "minSoil": 26.0,
-    "maxSoil": 28.0,
-    "minLight": 70000.0,
-    "maxLight": 80000.0
-  },
-  {
-    "name": "Cà phê chè",
-    "description": "Cần hãm khô tiệm cận điểm héo trong mùa khô mới tưới đợt đầu.\nKhông chịu được úng. Ưa bóng râm mạnh.",
-    "minTemp": 15.0,
-    "maxTemp": 24.0,
-    "minHumidity": 70.0,
-    "maxHumidity": 80.0,
-    "minSoil": 26.0,
-    "maxSoil": 28.0,
-    "minLight": 50000.0,
-    "maxLight": 70000.0
-  },
-  {
-    "name": "Hồ tiêu",
-    "description": "Úng rễ và thối nếu đọng nước >12-24 giờ.\nKỵ nắng trực tiếp, cần trồng dưới tán hoặc trụ sống che bóng.",
-    "minTemp": 18.0,
-    "maxTemp": 27.0,
-    "minHumidity": 70.0,
-    "maxHumidity": 90.0,
-    "minSoil": 65.0,
-    "maxSoil": 75.0,
-    "minLight": 20000.0,
-    "maxLight": 30000.0
-  },
-  {
-    "name": "Mắc ca",
-    "description": "Úng rễ và thối nếu đọng nước >12-24 giờ.\nKỵ nắng trực tiếp, cần trồng dưới tán hoặc trụ sống che bóng.",
-    "minTemp": 20.0,
-    "maxTemp": 25.0,
-    "minHumidity": 40.0,
-    "maxHumidity": 60.0,
-    "minSoil": 60.0,
-    "maxSoil": 80.0,
-    "minLight": 25000.0,
-    "maxLight": 40000.0
-  },
-  {
-    "name": "Cao su",
-    "description": "Độ ẩm >80% kèm sương có thể gây bệnh\nphấn trắng lá non. Rất kỵ úng. Cần tổng thời gian chiếu sáng lớn.",
-    "minTemp": 25.0,
-    "maxTemp": 28.0,
-    "minHumidity": 75.0,
-    "maxHumidity": 85.0,
-    "minSoil": 60.0,
-    "maxSoil": 80.0,
-    "minLight": 28000.0,
-    "maxLight": 38000.0
-  },
-  {
-    "name": "Điều",
-    "description": "Độ ẩm >80% kèm sương có thể gây bệnh\nphấn trắng lá non. Rất kỵ úng. Cần tổng thời gian chiếu sáng lớn.",
-    "minTemp": 24.0,
-    "maxTemp": 28.0,
-    "minHumidity": 65.0,
-    "maxHumidity": 80.0,
-    "minSoil": 40.0,
-    "maxSoil": 70.0,
-    "minLight": 20000.0,
-    "maxLight": 100000.0
-  }
-]
+{
+  "crops": [
+    {
+      "crop_id": "robusta_coffee",
+      "crop_name": "Cà phê vối (Robusta)",
+      "soil_ph_min": 5.0,
+      "soil_ph_max": 6.5,
+      "growth_stages": [
+        {
+          "stage_id": 1,
+          "stage_name": "Phát triển thân lá (Mùa mưa)",
+          "temp_min": 24,
+          "temp_max": 30,
+          "soil_moisture_min": 60,
+          "soil_moisture_max": 80,
+          "air_humidity_min": 80,
+          "air_humidity_max": 85,
+          "lux_min": 70000,
+          "lux_max": 80000,
+          "notes": "Duy trì bóng che 20-30% để tránh cháy lá."
+        },
+        {
+          "stage_id": 2,
+          "stage_name": "Phân hóa mầm hoa (Ép khô hạn)",
+          "temp_min": 24,
+          "temp_max": 30,
+          "soil_moisture_min": 26,
+          "soil_moisture_max": 28,
+          "air_humidity_min": 80,
+          "air_humidity_max": 85,
+          "lux_min": 70000,
+          "lux_max": 80000,
+          "notes": "Ép độ ẩm đất xuống điểm héo (26-28%) để cây phân hóa mầm hoa. Cảnh báo nếu có mưa trái mùa."
+        },
+        {
+          "stage_id": 3,
+          "stage_name": "Kích hoa và Nuôi quả",
+          "temp_min": 24,
+          "temp_max": 28,
+          "soil_moisture_min": 60,
+          "soil_moisture_max": 85,
+          "air_humidity_min": 80,
+          "air_humidity_max": 85,
+          "lux_min": 70000,
+          "lux_max": 80000,
+          "notes": "Tưới ép đợt 1 với lượng nước lớn (400-600 lít). Tuyệt đối cảnh báo úng nếu đất > 100%."
+        }
+      ]
+    },
+    {
+      "crop_id": "black_pepper",
+      "crop_name": "Hồ tiêu",
+      "soil_ph_min": 5.5,
+      "soil_ph_max": 6.5,
+      "growth_stages": [
+        {
+          "stage_id": 1,
+          "stage_name": "Sinh trưởng và Sau thu hoạch",
+          "temp_min": 18,
+          "temp_max": 27,
+          "soil_moisture_min": 60,
+          "soil_moisture_max": 70,
+          "air_humidity_min": 70,
+          "air_humidity_max": 90,
+          "lux_min": 20000,
+          "lux_max": 30000,
+          "notes": "Bão hòa ánh sáng rất thấp. Cảnh báo sốc nhiệt nếu temp > 40 hoặc < 15."
+        },
+        {
+          "stage_id": 2,
+          "stage_name": "Phân hóa mầm hoa (Ép bông)",
+          "temp_min": 20,
+          "temp_max": 27,
+          "soil_moisture_min": 65,
+          "soil_moisture_max": 75,
+          "air_humidity_min": 70,
+          "air_humidity_max": 80,
+          "lux_min": 20000,
+          "lux_max": 30000,
+          "notes": "Ngưng tưới khoảng 10-15 ngày tạo stress nhẹ."
+        },
+        {
+          "stage_id": 3,
+          "stage_name": "Ra hoa và Nuôi trái",
+          "temp_min": 25,
+          "temp_max": 27,
+          "soil_moisture_min": 80,
+          "soil_moisture_max": 100,
+          "air_humidity_min": 70,
+          "air_humidity_max": 90,
+          "lux_min": 20000,
+          "lux_max": 30000,
+          "notes": "Cần ẩm độ không khí cao để thụ phấn. Cảnh báo khẩn cấp (thối rễ) nếu ngập đọng nước > 12-24h."
+        }
+      ]
+    },
+    {
+      "crop_id": "durian",
+      "crop_name": "Sầu riêng",
+      "soil_ph_min": 5.5,
+      "soil_ph_max": 6.5,
+      "growth_stages": [
+        {
+          "stage_id": 1,
+          "stage_name": "Cây con / Kiến thiết cơ bản",
+          "temp_min": 24,
+          "temp_max": 30,
+          "soil_moisture_min": 65,
+          "soil_moisture_max": 80,
+          "air_humidity_min": 75,
+          "air_humidity_max": 85,
+          "lux_min": 60000,
+          "lux_max": 70000,
+          "notes": "Sử dụng lưới lan che 30-40% ánh sáng cho cây non."
+        },
+        {
+          "stage_id": 2,
+          "stage_name": "Xử lý ra hoa (Siết nước)",
+          "temp_min": 24,
+          "temp_max": 30,
+          "soil_moisture_min": 50,
+          "soil_moisture_max": 60,
+          "air_humidity_min": 60,
+          "air_humidity_max": 75,
+          "lux_min": 80000,
+          "lux_max": 110000,
+          "notes": "Cây lớn cần 100% nắng. Siết cạn nước, phủ bạt rễ. Cảnh báo nếu mưa trái mùa."
+        },
+        {
+          "stage_id": 3,
+          "stage_name": "Sổ nhụy (Nở hoa)",
+          "temp_min": 24,
+          "temp_max": 30,
+          "soil_moisture_min": 50,
+          "soil_moisture_max": 65,
+          "air_humidity_min": 70,
+          "air_humidity_max": 85,
+          "lux_min": 80000,
+          "lux_max": 110000,
+          "notes": "Chỉ tưới nhấp giữ ẩm bề mặt (20-30% lượng nước). Tưới đẫm sẽ làm rụng hoa."
+        },
+        {
+          "stage_id": 4,
+          "stage_name": "Nuôi quả non và Phát triển",
+          "temp_min": 24,
+          "temp_max": 30,
+          "soil_moisture_min": 70,
+          "soil_moisture_max": 90,
+          "air_humidity_min": 75,
+          "air_humidity_max": 85,
+          "lux_min": 80000,
+          "lux_max": 110000,
+          "notes": "Cần nhiều nước. Cảnh báo nhiệt độ > 35°C gây sốc nhiệt rụng quả non."
+        },
+        {
+          "stage_id": 5,
+          "stage_name": "Trước thu hoạch 1 tháng",
+          "temp_min": 24,
+          "temp_max": 30,
+          "soil_moisture_min": 50,
+          "soil_moisture_max": 60,
+          "air_humidity_min": 70,
+          "air_humidity_max": 80,
+          "lux_min": 80000,
+          "lux_max": 110000,
+          "notes": "Giảm lượng tưới để cơm sầu riêng không bị nhão, sượng."
+        }
+      ]
+    },
+    {
+      "crop_id": "cashew",
+      "crop_name": "Điều",
+      "soil_ph_min": 5.5,
+      "soil_ph_max": 6.5,
+      "growth_stages": [
+        {
+          "stage_id": 1,
+          "stage_name": "Sinh trưởng (Mùa mưa)",
+          "temp_min": 24,
+          "temp_max": 28,
+          "soil_moisture_min": 60,
+          "soil_moisture_max": 80,
+          "air_humidity_min": 65,
+          "air_humidity_max": 80,
+          "lux_min": 100000,
+          "lux_max": 120000,
+          "notes": "Chịu nắng 100%, cường độ chiếu sáng cực mạnh. Cảnh báo úng nếu ngập nước."
+        },
+        {
+          "stage_id": 2,
+          "stage_name": "Ra hoa (Kéo dài 85 ngày)",
+          "temp_min": 24,
+          "temp_max": 28,
+          "soil_moisture_min": 40,
+          "soil_moisture_max": 50,
+          "air_humidity_min": 50,
+          "air_humidity_max": 65,
+          "lux_min": 100000,
+          "lux_max": 120000,
+          "notes": "Yêu cầu khí hậu khô ráo hoàn toàn. Cảnh báo khẩn cấp (nguy cơ bọ xít muỗi, thán thư) nếu ẩm độ không khí > 80%."
+        },
+        {
+          "stage_id": 3,
+          "stage_name": "Nuôi quả",
+          "temp_min": 24,
+          "temp_max": 28,
+          "soil_moisture_min": 40,
+          "soil_moisture_max": 60,
+          "air_humidity_min": 60,
+          "air_humidity_max": 80,
+          "lux_min": 100000,
+          "lux_max": 120000,
+          "notes": "Tưới dặm mùa khô 40-60 lít/gốc. Nhiệt độ > 40°C sẽ gây rụng quả."
+        }
+      ]
+    }
+  ]
+}
