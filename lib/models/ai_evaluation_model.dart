@@ -27,7 +27,7 @@ class AiEvaluationResult {
     if (statusStr == 'danger') {
       overall = StatusLevel.danger;
     } else if (statusStr == 'warning') {
-      overall = StatusLevel.danger; // or warning level mapped to danger/warning
+      overall = StatusLevel.warning;
     } else {
       overall = StatusLevel.normal;
     }
@@ -36,11 +36,20 @@ class AiEvaluationResult {
     final Map<String, StatusLevel> params = {};
     rawParams.forEach((k, v) {
       final s = v.toString().toLowerCase();
-      params[k] = (s == 'danger' || s == 'warning') ? StatusLevel.danger : StatusLevel.normal;
+      if (s == 'danger') {
+        params[k] = StatusLevel.danger;
+      } else if (s == 'warning') {
+        params[k] = StatusLevel.warning;
+      } else {
+        params[k] = StatusLevel.normal;
+      }
     });
 
     final rawAdvice = (data['advice_list'] as List<dynamic>?) ?? [];
     final advice = rawAdvice.map((e) => e.toString()).toList();
+    if (advice.isEmpty) {
+      advice.add('Tất cả chỉ số đang nằm trong ngưỡng an toàn.');
+    }
 
     return AiEvaluationResult(
       riskScore: (data['risk_score'] as num?)?.toDouble() ?? 0.0,
@@ -67,7 +76,6 @@ class AiEvaluationResult {
     };
   }
 
-  /// Trạng thái của một cảm biến cụ thể (ph, temperature, humidity, soil, light)
   StatusLevel getParamStatus(String paramName) {
     return paramStatuses[paramName] ?? StatusLevel.normal;
   }

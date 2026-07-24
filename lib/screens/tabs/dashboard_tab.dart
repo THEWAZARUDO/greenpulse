@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/farm_model.dart';
 import '../../models/user_model.dart';
+import '../../models/plant_preset_manager.dart';
 import '../../services/firestore_service.dart';
 import '../../services/rtdb_service.dart';
 
@@ -516,47 +517,62 @@ class _SensorMetricsView extends StatelessWidget {
           ),
           const SizedBox(height: 14),
 
-          // 2x2 Metric Grid
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            childAspectRatio: 1.9,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-            children: [
-              _MetricTile(
-                label: 'Nhiệt độ',
-                value: '${sensor.temperature.toStringAsFixed(1)}°C',
-                icon: Icons.thermostat_outlined,
-                status: sensor.tempStatus,
-                progress: ((sensor.temperature - 12) / (35 - 12)).clamp(
-                  0.0,
-                  1.0,
-                ),
-              ),
-              _MetricTile(
-                label: 'Độ ẩm KK',
-                value: '${sensor.humidity.toStringAsFixed(1)}%',
-                icon: Icons.water_drop_outlined,
-                status: sensor.humidityStatus,
-                progress: (sensor.humidity / 100).clamp(0.0, 1.0),
-              ),
-              _MetricTile(
-                label: 'Độ ẩm đất',
-                value: '${sensor.soil.toStringAsFixed(1)}%',
-                icon: Icons.grass_outlined,
-                status: sensor.soilStatus,
-                progress: (sensor.soil / 100).clamp(0.0, 1.0),
-              ),
-              _MetricTile(
-                label: 'Ánh sáng',
-                value: '${sensor.light.toStringAsFixed(0)} lux',
-                icon: Icons.wb_sunny_outlined,
-                status: sensor.lightStatus,
-                progress: (sensor.light / 3500).clamp(0.0, 1.0),
-              ),
-            ],
+          // 5 Metric Grid
+          Builder(
+            builder: (context) {
+              final crop = PlantPresetManager.getCropById(sensor.cropId);
+              final stage = crop?.getStageById(sensor.stageId);
+              final maxLux = (stage?.luxMax ?? 100000.0) <= 0 ? 100000.0 : stage!.luxMax;
+
+              return GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                childAspectRatio: 1.9,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                children: [
+                  _MetricTile(
+                    label: 'Nhiệt độ',
+                    value: '${sensor.temperature.toStringAsFixed(1)}°C',
+                    icon: Icons.thermostat_outlined,
+                    status: sensor.tempStatus,
+                    progress: ((sensor.temperature - 12) / (35 - 12)).clamp(
+                      0.0,
+                      1.0,
+                    ),
+                  ),
+                  _MetricTile(
+                    label: 'Độ ẩm KK',
+                    value: '${sensor.humidity.toStringAsFixed(1)}%',
+                    icon: Icons.water_drop_outlined,
+                    status: sensor.humidityStatus,
+                    progress: (sensor.humidity / 100).clamp(0.0, 1.0),
+                  ),
+                  _MetricTile(
+                    label: 'Độ ẩm đất',
+                    value: '${sensor.soil.toStringAsFixed(1)}%',
+                    icon: Icons.grass_outlined,
+                    status: sensor.soilStatus,
+                    progress: (sensor.soil / 100).clamp(0.0, 1.0),
+                  ),
+                  _MetricTile(
+                    label: 'Ánh sáng',
+                    value: '${sensor.light.toStringAsFixed(0)} lux',
+                    icon: Icons.wb_sunny_outlined,
+                    status: sensor.lightStatus,
+                    progress: (sensor.light / maxLux).clamp(0.0, 1.0),
+                  ),
+                  _MetricTile(
+                    label: 'pH Đất',
+                    value: '${sensor.ph.toStringAsFixed(1)} pH',
+                    icon: Icons.science_outlined,
+                    status: sensor.phStatus,
+                    progress: (sensor.ph / 14.0).clamp(0.0, 1.0),
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 14),
 

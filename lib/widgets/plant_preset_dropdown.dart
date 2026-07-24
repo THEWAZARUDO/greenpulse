@@ -8,6 +8,7 @@ class PlantPresetDropdown extends StatelessWidget {
   final String farmId;
   final String sensorId;
   final String? currentCropId;
+  final int currentStageId;
   final bool compact;
 
   const PlantPresetDropdown({
@@ -15,36 +16,41 @@ class PlantPresetDropdown extends StatelessWidget {
     required this.farmId,
     required this.sensorId,
     this.currentCropId,
+    this.currentStageId = 1,
     this.compact = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 32,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: Builder(
-          builder: (context) {
-            final crops = PlantPresetManager.crops;
-            if (crops.isEmpty) {
-              return const Text('Chưa có cây');
-            }
+    final crops = PlantPresetManager.crops;
+    if (crops.isEmpty) {
+      return const Text('Chưa có cây');
+    }
 
-            CropModel? currentCrop = PlantPresetManager.getCropById(currentCropId);
-            currentCrop ??= crops.first;
+    CropModel currentCrop = PlantPresetManager.getCropById(currentCropId) ?? crops.first;
+    GrowthStage currentStage = currentCrop.getStageById(currentStageId);
 
-            return DropdownButton<String>(
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        // Dropdown chọn loại cây
+        Container(
+          height: 30,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey.shade300),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
               isDense: true,
               value: currentCrop.cropId,
               icon: const Icon(
                 Icons.arrow_drop_down,
-                size: 20,
+                size: 18,
                 color: Color(0xFF2E7D32),
               ),
               style: TextStyle(
@@ -58,9 +64,9 @@ class PlantPresetDropdown extends StatelessWidget {
                   child: Text(crop.cropName),
                 );
               }).toList(),
-              onChanged: (String? newValue) async {
-                if (newValue != null) {
-                  final selectedCrop = PlantPresetManager.getCropById(newValue);
+              onChanged: (String? newCropId) async {
+                if (newCropId != null) {
+                  final selectedCrop = PlantPresetManager.getCropById(newCropId);
                   if (selectedCrop != null) {
                     final uid = FirebaseAuth.instance.currentUser?.uid;
                     if (uid != null) {
@@ -69,15 +75,16 @@ class PlantPresetDropdown extends StatelessWidget {
                         farmId,
                         sensorId,
                         selectedCrop.cropId,
-                        stageId: 1,
+                        stageId: 1, // Reset sang giai đoạn 1 của cây mới
                       );
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              'Đã chuyển cảm biến $sensorId sang cây: ${selectedCrop.cropName}',
+                              'Đã cập nhật $sensorId: ${selectedCrop.cropName}',
                             ),
                             backgroundColor: const Color(0xFF1B5E20),
+                            duration: const Duration(seconds: 2),
                           ),
                         );
                       }
@@ -85,10 +92,73 @@ class PlantPresetDropdown extends StatelessWidget {
                   }
                 }
               },
-            );
-          },
+            ),
+          ),
         ),
-      ),
+
+        // Dropdown chọn giai đoạn sinh trưởng
+        Container(
+          height: 30,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            color: const Color(0xFFE8F5E9),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: const Color(0xFFA5D6A7)),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<int>(
+              isDense: true,
+              value: currentStage.stageId,
+              icon: const Icon(
+                Icons.alt_route_outlined,
+                size: 14,
+                color: Color(0xFF2E7D32),
+              ),
+              style: TextStyle(
+                fontSize: compact ? 10.5 : 11.5,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF1B5E20),
+              ),
+              items: currentCrop.growthStages.map((stage) {
+                String name = stage.stageName;
+                if (name.length > 22) {
+                  name = '${name.substring(0, 22)}...';
+                }
+                return DropdownMenuItem<int>(
+                  value: stage.stageId,
+                  child: Text('GĐ ${stage.stageId}: $name'),
+                );
+              }).toList(),
+              onChanged: (int? newStageId) async {
+                if (newStageId != null) {
+                  final uid = FirebaseAuth.instance.currentUser?.uid;
+                  if (uid != null) {
+                    await RTDBService().updateSensorCropAndStage(
+                      uid,
+                      farmId,
+                      sensorId,
+                      currentCrop.cropId,
+                      stageId: newStageId,
+                    );
+                    if (context.mounted) {
+                      final newStage = currentCrop.getStageById(newStageId);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Chuyển $sensorId sang: ${newStage.stageName}',
+                          ),
+                          backgroundColor: const Color(0xFF2E7D32),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  }
+                }
+              },
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

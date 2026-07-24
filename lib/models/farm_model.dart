@@ -2,13 +2,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'ai_evaluation_model.dart';
 
-enum StatusLevel { normal, danger }
+enum StatusLevel { normal, warning, danger }
 
 extension StatusLevelExtension on StatusLevel {
   Color get color {
     switch (this) {
       case StatusLevel.normal:
         return const Color(0xFF2E7D32); // Green
+      case StatusLevel.warning:
+        return const Color(0xFFF57C00); // Orange / Amber
       case StatusLevel.danger:
         return const Color(0xFFD32F2F); // Red
     }
@@ -18,6 +20,8 @@ extension StatusLevelExtension on StatusLevel {
     switch (this) {
       case StatusLevel.normal:
         return 'An toàn';
+      case StatusLevel.warning:
+        return 'Cảnh báo';
       case StatusLevel.danger:
         return 'Nguy hiểm';
     }
@@ -27,6 +31,8 @@ extension StatusLevelExtension on StatusLevel {
     switch (this) {
       case StatusLevel.normal:
         return Icons.check_circle_outline;
+      case StatusLevel.warning:
+        return Icons.warning_amber_outlined;
       case StatusLevel.danger:
         return Icons.error_outline;
     }

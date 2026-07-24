@@ -346,6 +346,7 @@ class _AlertCard extends StatelessWidget {
                   farmId: farm.id,
                   sensorId: sensor.id,
                   currentCropId: sensor.cropId,
+                  currentStageId: sensor.stageId,
                 ),
               ],
             ),

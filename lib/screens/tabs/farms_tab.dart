@@ -903,6 +903,7 @@ class _SensorRow extends StatelessWidget {
                   farmId: farmId,
                   sensorId: sensor.id,
                   currentCropId: sensor.cropId,
+                  currentStageId: sensor.stageId,
                   compact: true,
                 ),
               ],
