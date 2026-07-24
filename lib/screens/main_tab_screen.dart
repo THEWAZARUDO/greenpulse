@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/farm_model.dart';
 import '../services/firestore_service.dart';
 import '../services/rtdb_service.dart';
-import '../services/notification_service.dart';
 import 'tabs/dashboard_tab.dart';
 import 'tabs/farms_tab.dart';
 import 'tabs/alerts_tab.dart';
@@ -24,7 +23,6 @@ class _MainTabScreenState extends State<MainTabScreen> {
 
   final FirestoreService _firestoreService = FirestoreService();
   final RTDBService _rtdbService = RTDBService();
-  final NotificationService _notificationService = NotificationService();
 
   StreamSubscription? _farmsSub;
   final Map<String, StreamSubscription> _sensorSubs = {};
@@ -70,7 +68,6 @@ class _MainTabScreenState extends State<MainTabScreen> {
                 hasAlert = true;
                 alertMsg =
                     '${farm.name} - Cảm biến ${sensor.id}: ${sensor.overallStatus.label}!';
-                _notificationService.processSensorAlerts(farm.name, sensor);
               }
             }
 

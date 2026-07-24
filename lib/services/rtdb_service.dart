@@ -7,7 +7,7 @@ class RTDBService {
   final FirebaseDatabase _db = FirebaseDatabase.instance;
 
   /// Stream dữ liệu của các sensors trong 1 farm từ Realtime Database,
-  /// tự động ENRICH dữ liệu qua AI Service (hoặc Offline Fallback Evaluator)
+  /// tự động ENRICH dữ liệu qua AI Service (hoặc Offline Fallback Evaluator) SONG SONG (Future.wait)
   /// và phát Push Notification nếu phát hiện nguy hiểm/cảnh báo.
   Stream<List<SensorData>> watchSensors(String uid, String farmId, {String farmName = 'Nông trại'}) {
     final ref = _db.ref('sensors/$uid/$farmId');
@@ -27,27 +27,27 @@ class RTDBService {
         }
       });
 
-      // ENRICH: Gửi từng cảm biến qua AI Service để tính toán aiEvaluation
-      final List<SensorData> enrichedSensors = [];
-      for (final rawSensor in rawSensors) {
-        final aiResult = await AiApiService.evaluateSensor(rawSensor);
-        final enrichedSensor = rawSensor.copyWith(aiEvaluation: aiResult);
-        enrichedSensors.add(enrichedSensor);
+      // ENRICH SONG SONG (Parallel Execution via Future.wait)
+      final enrichedSensors = await Future.wait(
+        rawSensors.map((rawSensor) async {
+          final aiResult = await AiApiService.evaluateSensor(rawSensor);
+          final enriched = rawSensor.copyWith(aiEvaluation: aiResult);
 
-        // Tự động kiểm tra và phát Push Notification nếu có cảnh báo nguy hiểm
-        if (enrichedSensor.overallStatus != StatusLevel.normal) {
-          NotificationService().processSensorAlerts(
-            farmName,
-            enrichedSensor,
-          );
-        }
-      }
+          if (enriched.overallStatus != StatusLevel.normal) {
+            NotificationService().processSensorAlerts(
+              farmName,
+              enriched,
+            );
+          }
+          return enriched;
+        }),
+      );
 
       return enrichedSensors;
     });
   }
 
-  /// Lấy toàn bộ sensors của người dùng trên tất cả farms (đã qua ENRICH AI)
+  /// Lấy toàn bộ sensors của người dùng trên tất cả farms (đã qua ENRICH AI song song)
   Stream<List<SensorData>> watchAllSensors(String uid) {
     final ref = _db.ref('sensors/$uid');
     return ref.onValue.asyncMap((event) async {
@@ -58,23 +58,29 @@ class RTDBService {
       }
 
       final dataMap = Map<String, dynamic>.from(snapshot.value as Map);
-      for (final farmEntry in dataMap.entries) {
-        final farmId = farmEntry.key.toString();
-        if (farmEntry.value is Map) {
-          final sensorsMap = Map<String, dynamic>.from(farmEntry.value as Map);
-          for (final sensorEntry in sensorsMap.entries) {
-            if (sensorEntry.value is Map) {
-              final sensorData = Map<String, dynamic>.from(sensorEntry.value as Map);
-              sensorData['__farmId'] = farmId;
-              final rawSensor = SensorData.fromMap(sensorData, id: sensorEntry.key.toString());
-              final aiResult = await AiApiService.evaluateSensor(rawSensor);
-              allSensors.add(rawSensor.copyWith(aiEvaluation: aiResult));
-            }
-          }
-        }
-      }
+      final List<SensorData> rawSensors = [];
 
-      return allSensors;
+      dataMap.forEach((farmId, farmValue) {
+        if (farmValue is Map) {
+          final sensorsMap = Map<String, dynamic>.from(farmValue);
+          sensorsMap.forEach((sensorId, sensorValue) {
+            if (sensorValue is Map) {
+              final sensorData = Map<String, dynamic>.from(sensorValue);
+              sensorData['__farmId'] = farmId.toString();
+              rawSensors.add(SensorData.fromMap(sensorData, id: sensorId.toString()));
+            }
+          });
+        }
+      });
+
+      final enrichedSensors = await Future.wait(
+        rawSensors.map((rawSensor) async {
+          final aiResult = await AiApiService.evaluateSensor(rawSensor);
+          return rawSensor.copyWith(aiEvaluation: aiResult);
+        }),
+      );
+
+      return enrichedSensors;
     });
   }
 
