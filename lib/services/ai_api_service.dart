@@ -33,7 +33,7 @@ class AiApiService {
   static const Duration _circuitBreakerDuration = Duration(seconds: 30);
 
   static String _getCacheKey(SensorData sensor) {
-    return '${sensor.id}_${sensor.cropId}_${sensor.stageId}_${sensor.temperature}_${sensor.humidity}_${sensor.soil}_${sensor.light}_${sensor.ph}';
+    return '${sensor.id}_${sensor.cropId}_${sensor.stageId}';
   }
 
   /// Kiểm tra xem cảm biến đã có kết quả cache hợp lệ chưa
