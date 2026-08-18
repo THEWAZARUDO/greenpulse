@@ -66,5 +66,27 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+
+	<!-- Quyền truy cập mạng cục bộ (Kết nối HTTP 192.168.4.1 để cấu hình ESP32) -->
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>GreenPulse cần quyền truy cập mạng cục bộ để tìm kiếm, kết nối và nạp cấu hình Wi-Fi cho thiết bị cảm biến ESP32.</string>
+
+	<!-- Cho phép kết nối HTTP mạng nội bộ tới ESP32 AP -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+
+	<!-- Quyền vị trí phục vụ nhận diện mạng Wi-Fi của thiết bị IoT -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>GreenPulse cần quyền vị trí để hỗ trợ quét và kết nối với điểm truy cập Wi-Fi của mạch cảm biến nông nghiệp.</string>
+
+	<!-- Chế độ chạy nền phục vụ cập nhật và nhận thông báo cảnh báo -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>
