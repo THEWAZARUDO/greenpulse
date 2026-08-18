@@ -5,6 +5,7 @@ import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
 import '../../models/plant_preset_manager.dart';
 import '../../services/rtdb_service.dart';
+import '../../services/notification_service.dart';
 import '../../models/farm_model.dart';
 
 class ProfileTab extends StatelessWidget {
@@ -237,24 +238,82 @@ class ProfileTab extends StatelessWidget {
                       const _ThresholdReferenceCard(),
                       const SizedBox(height: 14),
 
-                      // App info card
-                      _SectionCard(
-                        title: 'Thiết lập Thông báo & Cảnh báo',
-                        icon: Icons.notifications_active_outlined,
-                        children: [
-                          _SettingsTile(
-                            icon: Icons.timer_outlined,
-                            label: 'Tần suất thông báo cảnh báo',
-                            trailing: const Text(
-                              '1 phút / lần',
-                              style: TextStyle(
-                                color: Color(0xFF2E7D32),
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
+                      // Thiết lập Thông báo & Cảnh báo card (Dropdown 1 đến 10 phút)
+                      StatefulBuilder(
+                        builder: (context, setCardState) {
+                          final currentFreq =
+                              NotificationService().alertFrequencyMinutes;
+                          return _SectionCard(
+                            title: 'Thiết lập Thông báo & Cảnh báo',
+                            icon: Icons.notifications_active_outlined,
+                            children: [
+                              _SettingsTile(
+                                icon: Icons.timer_outlined,
+                                label: 'Tần suất thông báo cảnh báo',
+                                trailing: Container(
+                                  height: 30,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFE8F5E9),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: const Color(0xFFA5D6A7),
+                                    ),
+                                  ),
+                                  child: DropdownButtonHideUnderline(
+                                    child: DropdownButton<int>(
+                                      isDense: true,
+                                      value: currentFreq,
+                                      icon: const Icon(
+                                        Icons.arrow_drop_down,
+                                        size: 18,
+                                        color: Color(0xFF2E7D32),
+                                      ),
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF1B5E20),
+                                      ),
+                                      items: List.generate(
+                                        10,
+                                        (index) => index + 1,
+                                      ).map((min) {
+                                        return DropdownMenuItem<int>(
+                                          value: min,
+                                          child: Text('$min phút / lần'),
+                                        );
+                                      }).toList(),
+                                      onChanged: (int? newMin) {
+                                        if (newMin != null) {
+                                          NotificationService()
+                                              .setAlertFrequencyMinutes(newMin);
+                                          setCardState(() {});
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                'Đã cập nhật tần suất thông báo: $newMin phút/lần',
+                                              ),
+                                              backgroundColor: const Color(
+                                                0xFF2E7D32,
+                                              ),
+                                              duration: const Duration(
+                                                seconds: 2,
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        ],
+                            ],
+                          );
+                        },
                       ),
                       const SizedBox(height: 14),
 
@@ -274,17 +333,6 @@ class ProfileTab extends StatelessWidget {
                               ),
                             ),
                           ),
-                          _SettingsTile(
-                            icon: Icons.developer_board_outlined,
-                            label: 'Giao thức thiết bị',
-                            trailing: const Text(
-                              'WiFi AP / RTDB',
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                       const SizedBox(height: 28),
@@ -292,25 +340,44 @@ class ProfileTab extends StatelessWidget {
                       // Sign out button
                       SizedBox(
                         width: double.infinity,
-                        height: 50,
+                        height: 48,
                         child: OutlinedButton.icon(
                           onPressed: () => _confirmSignOut(context),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.red.shade600,
+                            foregroundColor: Colors.grey.shade800,
                             side: BorderSide(
-                              color: Colors.red.shade300,
-                              width: 1.5,
+                              color: Colors.grey.shade400,
+                              width: 1.2,
                             ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14),
                             ),
                           ),
-                          icon: const Icon(Icons.logout, size: 20),
+                          icon: const Icon(Icons.logout, size: 18),
                           label: const Text(
                             'Đăng xuất tài khoản',
                             style: TextStyle(
-                              fontSize: 15,
+                              fontSize: 14.5,
                               fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Delete account button (Google Play standard)
+                      Center(
+                        child: TextButton.icon(
+                          onPressed: () => _confirmDeleteAccount(context),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.red.shade600,
+                          ),
+                          icon: const Icon(Icons.delete_forever_outlined, size: 16),
+                          label: const Text(
+                            'Xóa vĩnh viễn tài khoản & dữ liệu',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
@@ -382,9 +449,17 @@ class ProfileTab extends StatelessWidget {
             child: const Text('Hủy'),
           ),
           FilledButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.of(ctx).pop();
-              AuthService().signOut();
+              try {
+                await AuthService().signOut();
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Lỗi đăng xuất: $e')),
+                  );
+                }
+              }
             },
             style: FilledButton.styleFrom(
               backgroundColor: Colors.red,
@@ -393,6 +468,55 @@ class ProfileTab extends StatelessWidget {
               ),
             ),
             child: const Text('Đăng xuất'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteAccount(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.red, size: 24),
+            SizedBox(width: 8),
+            Text('Xóa tài khoản'),
+          ],
+        ),
+        content: const Text(
+          'Hành động này sẽ xóa vĩnh viễn tài khoản của bạn và toàn bộ cấu hình trang trại trên hệ thống. Bạn không thể khôi phục lại dữ liệu sau khi xóa.\n\nBạn có chắc chắn muốn xóa không?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Hủy'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              try {
+                await AuthService().deleteAccount();
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Lỗi khi xóa tài khoản: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red.shade700,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: const Text('Xác nhận Xóa'),
           ),
         ],
       ),
@@ -603,7 +727,7 @@ class _ThresholdReferenceCardState extends State<_ThresholdReferenceCard> {
         final stage = crop?.getStageById(selectedSensor.stageId);
 
         return _SectionCard(
-          title: 'Ngưỡng tối ưu AI Mờ (Fuzzy Logic)',
+          title: 'Ngưỡng an toàn cho cây trồng.',
           icon: Icons.tune_outlined,
           titleTrailing: Container(
             height: 28,

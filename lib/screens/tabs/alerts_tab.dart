@@ -5,7 +5,6 @@ import '../../models/farm_model.dart';
 import '../../widgets/plant_preset_dropdown.dart';
 import '../../services/firestore_service.dart';
 import '../../services/rtdb_service.dart';
-import '../../services/ai_api_service.dart';
 
 class AlertsTab extends StatefulWidget {
   const AlertsTab({super.key});
@@ -156,7 +155,6 @@ class _AlertCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final status = sensor.overallStatus;
     final adviceList = sensor.adviceList;
-    final isAllGood = status == StatusLevel.normal;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -206,6 +204,8 @@ class _AlertCard extends StatelessWidget {
                           fontSize: 11,
                           color: Colors.grey.shade600,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -230,122 +230,66 @@ class _AlertCard extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 12),
 
-            if (!isAllGood) ...[
-              const SizedBox(height: 14),
-              const Divider(height: 1),
-              const SizedBox(height: 12),
+            // AI Advice & Status List
+            if (adviceList.isNotEmpty) ...[
               Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(5),
                     decoration: BoxDecoration(
                       color: const Color(0xFFE8F5E9),
-                      borderRadius: BorderRadius.circular(7),
+                      borderRadius: BorderRadius.circular(6),
                     ),
                     child: const Icon(
-                      Icons.psychology_outlined,
+                      Icons.lightbulb_outline,
                       size: 14,
                       color: Color(0xFF2E7D32),
                     ),
                   ),
                   const SizedBox(width: 7),
                   const Text(
-                    'Phân tích & Khuyến nghị AI',
+                    'Phân tích AI',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 12.5,
                       color: Color(0xFF1B5E20),
                     ),
                   ),
-                  const Spacer(),
-                  //Debug function: Nhãn báo trạng thái AI Server (Online 🟢 vs Offline 🟡)
-                  _buildAiServerStatusBadge(sensor.aiEvaluation?.isOfflineFallback ?? true),
                 ],
               ),
               const SizedBox(height: 8),
               ...adviceList.map(
                 (adv) => Padding(
-                  padding: const EdgeInsets.only(top: 5),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        margin: const EdgeInsets.only(top: 4),
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: status.color,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          adv,
-                          style: const TextStyle(
-                            fontSize: 12.5,
-                            height: 1.4,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ),
-                    ],
+                  padding: const EdgeInsets.only(top: 4, left: 2),
+                  child: Text(
+                    '• $adv',
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      height: 1.4,
+                      color: Colors.black87,
+                    ),
                   ),
                 ),
               ),
             ],
 
-            if (isAllGood) ...[
-              const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5E9),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.check_circle_outline,
-                      size: 16,
-                      color: Color(0xFF2E7D32),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        adviceList.isNotEmpty
-                            ? adviceList.first
-                            : 'Tất cả chỉ số đang ở mức an toàn.',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF1B5E20),
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
             const Divider(height: 1),
-            const SizedBox(height: 6),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            const SizedBox(height: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Cây trồng:',
+                  'Cây trồng & Giai đoạn sinh trưởng:',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11.5,
                     fontWeight: FontWeight.w600,
                     color: Colors.black54,
                   ),
                 ),
+                const SizedBox(height: 6),
                 PlantPresetDropdown(
                   farmId: farm.id,
                   sensorId: sensor.id,
@@ -360,59 +304,3 @@ class _AlertCard extends StatelessWidget {
     );
   }
 }
-
-//Debug function: Widget hiển thị nhãn nhận biết trạng thái kết nối Server AI (Online 🟢 vs Offline 🟡 vs Waking Up ⏳)
-Widget _buildAiServerStatusBadge(bool isOffline) {
-  final isWakingUp = AiApiService.isWakingUp && isOffline;
-  final color = isWakingUp
-      ? const Color(0xFF0288D1)
-      : (isOffline ? const Color(0xFFF57C00) : const Color(0xFF2E7D32));
-  final bgColor = isWakingUp
-      ? const Color(0xFFE1F5FE)
-      : (isOffline ? const Color(0xFFFFF3E0) : const Color(0xFFE8F5E9));
-  final borderColor = isWakingUp
-      ? const Color(0xFF81D4FA)
-      : (isOffline ? const Color(0xFFFFB74D) : const Color(0xFF81C784));
-  final labelText = isWakingUp
-      ? 'Render đang dậy...'
-      : (isOffline ? 'Offline' : 'AI Online');
-
-  return Container(
-    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-    decoration: BoxDecoration(
-      color: bgColor,
-      borderRadius: BorderRadius.circular(6),
-      border: Border.all(color: borderColor),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (isWakingUp)
-          const SizedBox(
-            width: 8,
-            height: 8,
-            child: CircularProgressIndicator(
-              strokeWidth: 1.5,
-              color: Color(0xFF0288D1),
-            ),
-          )
-        else
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(shape: BoxShape.circle, color: color),
-          ),
-        const SizedBox(width: 4),
-        Text(
-          labelText,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-      ],
-    ),
-  );
-}
-

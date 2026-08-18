@@ -1,6 +1,10 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'firebase_options.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_tab_screen.dart';
@@ -12,9 +16,39 @@ import 'models/plant_preset_manager.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // 1. Kích hoạt lưu trữ bộ nhớ đệm ngoại tuyến (Offline Persistence)
+  FirebaseFirestore.instance.settings = const Settings(
+    persistenceEnabled: true,
+    cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+  );
+  FirebaseDatabase.instance.setPersistenceEnabled(true);
+
+  // 2. Global Error Handler: Bắt và ghi nhận các lỗi chưa bắt để bảo vệ app
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint('[GreenPulse Global Error] ${details.exceptionAsString()}');
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('[GreenPulse Platform Error] $error');
+    return true;
+  };
+
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // Tự động gửi tất cả lỗi Flutter chưa bắt được về Firebase Console
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+  // Bắt lỗi bất đồng bộ nền tảng (PlatformDispatcher)
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
+
   await NotificationService().init();
   await PlantPresetManager.loadPresets();
   runApp(const MyApp());
+
+  
 }
 
 class MyApp extends StatelessWidget {

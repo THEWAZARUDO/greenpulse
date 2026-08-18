@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/farm_model.dart';
 import '../services/firestore_service.dart';
 import '../services/rtdb_service.dart';
+import '../services/notification_service.dart';
 import 'tabs/dashboard_tab.dart';
 import 'tabs/farms_tab.dart';
 import 'tabs/alerts_tab.dart';
@@ -26,6 +27,7 @@ class _MainTabScreenState extends State<MainTabScreen> {
 
   StreamSubscription? _farmsSub;
   final Map<String, StreamSubscription> _sensorSubs = {};
+  StreamSubscription? _authSub;
 
   static const List<Widget> _tabs = [
     DashboardTab(),
@@ -38,6 +40,12 @@ class _MainTabScreenState extends State<MainTabScreen> {
   void initState() {
     super.initState();
     _listenToAlerts();
+    // Lắng nghe trạng thái Auth để hủy toàn bộ stream khi đăng xuất
+    _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (user == null) {
+        _cancelAllSubscriptions();
+      }
+    });
   }
 
   void _listenToAlerts() {
@@ -84,12 +92,20 @@ class _MainTabScreenState extends State<MainTabScreen> {
     });
   }
 
-  @override
-  void dispose() {
+  /// Hủy toàn bộ stream subscriptions (farms + sensors)
+  void _cancelAllSubscriptions() {
     _farmsSub?.cancel();
+    _farmsSub = null;
     for (var sub in _sensorSubs.values) {
       sub.cancel();
     }
+    _sensorSubs.clear();
+  }
+
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    _cancelAllSubscriptions();
     super.dispose();
   }
 
@@ -161,9 +177,9 @@ class _MainTabScreenState extends State<MainTabScreen> {
                         color: Colors.white24,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Text(
-                        '1 phút/lần',
-                        style: TextStyle(
+                      child: Text(
+                        '${NotificationService().alertFrequencyMinutes} phút/lần',
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,

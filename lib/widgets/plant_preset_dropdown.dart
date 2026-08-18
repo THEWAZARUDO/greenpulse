@@ -30,6 +30,10 @@ class PlantPresetDropdown extends StatelessWidget {
     CropModel currentCrop = PlantPresetManager.getCropById(currentCropId) ?? crops.first;
     GrowthStage currentStage = currentCrop.getStageById(currentStageId);
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final maxCropWidth = (screenWidth * 0.42).clamp(130.0, 180.0);
+    final maxStageWidth = (screenWidth * 0.45).clamp(140.0, 200.0);
+
     return Wrap(
       spacing: 6,
       runSpacing: 6,
@@ -38,6 +42,7 @@ class PlantPresetDropdown extends StatelessWidget {
         // Dropdown chọn loại cây
         Container(
           height: 30,
+          constraints: BoxConstraints(maxWidth: maxCropWidth),
           padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
             color: Colors.grey.shade50,
@@ -47,6 +52,7 @@ class PlantPresetDropdown extends StatelessWidget {
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               isDense: true,
+              isExpanded: true,
               value: currentCrop.cropId,
               icon: const Icon(
                 Icons.arrow_drop_down,
@@ -61,7 +67,10 @@ class PlantPresetDropdown extends StatelessWidget {
               items: crops.map((crop) {
                 return DropdownMenuItem<String>(
                   value: crop.cropId,
-                  child: Text(crop.cropName),
+                  child: Text(
+                    crop.cropName,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 );
               }).toList(),
               onChanged: (String? newCropId) async {
@@ -99,6 +108,7 @@ class PlantPresetDropdown extends StatelessWidget {
         // Dropdown chọn giai đoạn sinh trưởng
         Container(
           height: 30,
+          constraints: BoxConstraints(maxWidth: maxStageWidth),
           padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
             color: const Color(0xFFE8F5E9),
@@ -108,6 +118,7 @@ class PlantPresetDropdown extends StatelessWidget {
           child: DropdownButtonHideUnderline(
             child: DropdownButton<int>(
               isDense: true,
+              isExpanded: true,
               value: currentStage.stageId,
               icon: const Icon(
                 Icons.alt_route_outlined,
@@ -120,13 +131,12 @@ class PlantPresetDropdown extends StatelessWidget {
                 color: const Color(0xFF1B5E20),
               ),
               items: currentCrop.growthStages.map((stage) {
-                String name = stage.stageName;
-                if (name.length > 22) {
-                  name = '${name.substring(0, 22)}...';
-                }
                 return DropdownMenuItem<int>(
                   value: stage.stageId,
-                  child: Text('GĐ ${stage.stageId}: $name'),
+                  child: Text(
+                    'GĐ ${stage.stageId}: ${stage.stageName}',
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 );
               }).toList(),
               onChanged: (int? newStageId) async {

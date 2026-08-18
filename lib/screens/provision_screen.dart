@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import '../models/farm_model.dart';
 import '../services/firestore_service.dart';
-import '../services/rtdb_service.dart';
 
 /// Màn hình cấu hình kết nối ESP32 qua WiFi AP (Cách 2).
 ///
@@ -117,41 +116,6 @@ class _ProvisionScreenState extends State<ProvisionScreen> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
-  }
-
-  Future<void> _sendMockSensorData() async {
-    if (_selectedFarm == null) {
-      _showMessage('Vui lòng chọn một Nông trại!', isError: true);
-      return;
-    }
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
-
-    final sensorId = _sensorIdCtrl.text.trim().isEmpty
-        ? 'sensor_debug'
-        : _sensorIdCtrl.text.trim();
-
-    final rtdbService = RTDBService();
-    final mockSensor = SensorData(
-      id: sensorId,
-      temperature: 28.5,
-      humidity: 65.0,
-      soil: 55.0,
-      light: 1200.0,
-    );
-
-    await rtdbService.addOrUpdateSensor(
-      uid,
-      _selectedFarm!.id,
-      sensorId,
-      mockSensor,
-    );
-
-    setState(() {
-      _status = _ProvisionStatus.success;
-      _statusMessage =
-          'Đã nạp thành công Mạch Giả Lập ($sensorId) vào Realtime Database cho nông trại "${_selectedFarm!.name}".';
-    });
   }
 
   void _showMessage(String msg, {bool isError = false}) {
@@ -350,23 +314,6 @@ class _ProvisionScreenState extends State<ProvisionScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: _loading ? null : _sendMockSensorData,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFFE65100),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  side: const BorderSide(color: Color(0xFFE65100)),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                icon: const Icon(Icons.bug_report),
-                label: const Text(
-                  'Tạo / Nạp Mạch Giả Lập (Debug)',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                ),
-              ),
-              const SizedBox(height: 32),
             ],
           ),
         ),

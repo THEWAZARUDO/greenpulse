@@ -64,6 +64,21 @@ class AuthService {
   // ─── Đăng xuất ────────────────────────────────────────────────────────────
   Future<void> signOut() => _auth.signOut();
 
+  // ─── Xóa Tài Khoản Vĩnh Viễn (Google Play / Privacy Standard) ─────────────
+  Future<void> deleteAccount() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    final uid = user.uid;
+
+    // Xóa document người dùng trong Firestore
+    try {
+      await _db.collection('users').doc(uid).delete();
+    } catch (_) {}
+
+    // Xóa tài khoản Firebase Auth
+    await user.delete();
+  }
+
   // ─── Quên Mật Khẩu ───────────────────────────────────────────────────────
   Future<void> sendPasswordResetEmail({required String email}) async {
     await _auth.sendPasswordResetEmail(email: email.trim());
