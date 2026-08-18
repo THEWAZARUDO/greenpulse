@@ -73,47 +73,49 @@ Trong đó $z^*$ là điểm nguy cơ đầu ra (Risk Score), $z_i$ là giá tr�
 
 ## 3. Kiến trúc hệ thống
 
-### 3.1. Sơ đồ tổng quan
+### 3.1. Sơ đồ tổng quan (Dual-Engine Architecture)
+
+Hệ thống hoạt động theo kiến trúc kết hợp **Edge AI 0ms (khi mở app)** và **Cloud Functions 24/7 (khi đóng app)**:
 
 ```
-┌─────────────────┐         ┌──────────────────────┐         ┌──────────────────┐
-│   ESP32/ESP8266  │────────▶│  Firebase Realtime DB │────────▶│  Flutter Mobile   │
-│   (Cảm biến)    │  WiFi   │  (Đồng bộ realtime)  │  Stream │  App (Android/iOS)│
-└─────────────────┘         └──────────────────────┘         └────────┬─────────┘
-                                                                      │
-                            ┌──────────────────────┐                  │
-                            │  Cloud Firestore     │◀─────────────────┘
-                            │  (Nông trại, Users)  │         Quản lý dữ liệu
-                            └──────────────────────┘
-                                                             ┌────────────────────┐
-                                                             │ FuzzyLogicEngine   │
-                                                             │ (Native Edge AI)   │
-                                                             │ Dart thuần - 0ms   │
-                                                             └────────────────────┘
+┌─────────────────┐         ┌────────────────────────┐         ┌────────────────────────┐
+│   ESP32/ESP8266  │────────▶│  Firebase Realtime DB  │────────▶│  Flutter Mobile App    │
+│   (Cảm biến)    │  WiFi   │  (Đồng bộ realtime)    │  Stream │  (Android & iOS)       │
+└─────────────────┘         └───────────┬────────────┘         └───────────┬────────────┘
+                                        │                                  │
+                                        │ Database Trigger                 │ Quản lý dữ liệu & Token
+                                        ▼                                  ▼
+                            ┌────────────────────────┐         ┌────────────────────────┐
+                            │ Firebase Cloud Function│────────▶│  Cloud Firestore       │
+                            │ (Backend Serverless)   │  Đọc    │  (Nông trại, Users,    │
+                            └───────────┬────────────┘  Token  │   FCM Device Tokens)   │
+                                        │                      └────────────────────────┘
+                                        ▼ Push 24/7
+                            ┌────────────────────────┐
+                            │ Google FCM / Apple APNs│────────▶ Màn hình khóa điện thoại
+                            │ (Thông báo khi tắt app)│
+                            └────────────────────────┘
 ```
 
 ### 3.2. Các thành phần chính
 
 | Thành phần | Công nghệ | Vai trò |
 | :--- | :--- | :--- |
-| Ứng dụng di động | Flutter 3.x / Dart 3.x | Giao diện người dùng đa nền tảng |
-| Bộ máy AI Mờ | Dart Native (`FuzzyLogicEngine`) | Suy diễn mờ Mamdani chạy cục bộ trên thiết bị |
+| Ứng dụng di động | Flutter 3.x / Dart 3.x | Giao diện người dùng đa nền tảng (Android / iOS) |
+| Bộ máy Edge AI | Dart Native (`FuzzyLogicEngine`) | Suy diễn mờ Mamdani cục bộ, phản hồi 0ms khi mở app |
+| Đám mây Serverless 24/7 | Firebase Cloud Functions (Node.js) | Lắng nghe thay đổi Realtime DB, phân tích ngưỡng nguy hiểm 24/7 |
+| Thông báo đẩy từ xa | Firebase Cloud Messaging (FCM) | Bắn thông báo đẩy về màn hình khóa ngay cả khi đóng app |
 | Cơ sở dữ liệu thời gian thực | Firebase Realtime Database | Nhận và phát luồng dữ liệu cảm biến |
-| Cơ sở dữ liệu đám mây | Cloud Firestore | Lưu trữ thông tin nông trại và người dùng |
-| Xác thực | Firebase Authentication | Đăng ký, đăng nhập và xác thực email |
-| Thông báo đẩy | `flutter_local_notifications` | Phát cảnh báo khi chỉ số vượt ngưỡng |
-| Phần cứng IoT | ESP32 / ESP8266 | Thu thập dữ liệu cảm biến môi trường |
+| Cơ sở dữ liệu đám mây | Cloud Firestore | Lưu trữ thông tin nông trại, người dùng và FCM Tokens |
+| Xác thực | Firebase Authentication | Đăng ký, đăng nhập và bảo mật người dùng |
+| Phần cứng IoT | ESP32 / ESP8266 | Thu thập dữ liệu 5 thông số cảm biến môi trường |
 
 ### 3.3. Luồng xử lý dữ liệu
 
-```
-Cảm biến → ESP32 → Firebase RTDB → Flutter App → FuzzyLogicEngine → Kết quả đánh giá
-                                                                           │
-                                                                    ┌──────┴──────┐
-                                                                    │             │
-                                                              Hiển thị UI   Thông báo đẩy
-                                                             (Dashboard)    (nếu nguy hiểm)
-```
+- **Trường hợp 1 (Người dùng ĐANG MỞ app):**
+  $$\text{ESP32} \xrightarrow{\text{WiFi}} \text{Firebase RTDB} \xrightarrow{\text{Stream}} \text{Flutter App} \xrightarrow{\text{Edge AI}} \text{FuzzyLogicEngine} \xrightarrow{\text{0ms}} \text{Dashboard \& Alerts UI}$$
+- **Trường hợp 2 (Ứng dụng ĐANG ĐÓNG / Khóa màn hình):**
+  $$\text{ESP32} \xrightarrow{\text{WiFi}} \text{Firebase RTDB} \xrightarrow{\text{Trigger}} \text{Cloud Function} \xrightarrow{\text{Nguy hiểm}} \text{FCM Push} \xrightarrow{\text{24/7}} \text{Màn hình khóa Android/iOS}$$
 
 ---
 
@@ -122,38 +124,43 @@ Cảm biến → ESP32 → Firebase RTDB → Flutter App → FuzzyLogicEngine �
 ### 4.1. Cấu trúc mã nguồn
 
 ```
-lib/
-├── main.dart                          # Điểm khởi chạy ứng dụng
-├── firebase_options.dart              # Cấu hình Firebase đa nền tảng
+greenpulse/
+├── functions/                         # Tầng Đám mây 24/7 (Firebase Cloud Functions)
+│   ├── index.js                       # Logic trigger RTDB & gửi push FCM tự động 24/7
+│   └── package.json                   # Cấu hình Node.js
 │
-├── models/                            # Tầng dữ liệu (Data Layer)
-│   ├── fuzzy_logic_engine.dart        # Bộ máy suy diễn mờ Mamdani
-│   ├── ai_evaluation_model.dart       # Mô hình kết quả đánh giá AI
-│   ├── crop_preset_model.dart         # Mô hình cây trồng & giai đoạn sinh trưởng
-│   ├── farm_model.dart                # Mô hình nông trại & dữ liệu cảm biến
-│   ├── plant_preset_manager.dart      # Quản lý bộ quy chuẩn cây trồng
-│   └── user_model.dart                # Mô hình thông tin người dùng
-│
-├── services/                          # Tầng dịch vụ (Service Layer)
-│   ├── rtdb_service.dart              # Dịch vụ luồng dữ liệu Realtime Database
-│   ├── firestore_service.dart         # Dịch vụ thao tác Cloud Firestore
-│   ├── auth_service.dart              # Dịch vụ xác thực Firebase Auth
-│   └── notification_service.dart      # Dịch vụ thông báo đẩy cục bộ
-│
-├── screens/                           # Tầng giao diện (Presentation Layer)
-│   ├── login_screen.dart              # Màn hình đăng nhập
-│   ├── register_screen.dart           # Màn hình đăng ký
-│   ├── verify_email_screen.dart       # Màn hình xác thực email
-│   ├── main_tab_screen.dart           # Thanh điều hướng chính (4 tab)
-│   ├── provision_screen.dart          # Màn hình cấu hình Wi-Fi cho ESP32
-│   └── tabs/
-│       ├── dashboard_tab.dart         # Bảng điều khiển tổng quan
-│       ├── farms_tab.dart             # Quản lý nông trại & cảm biến
-│       ├── alerts_tab.dart            # Nhật ký cảnh báo & phân tích
-│       └── profile_tab.dart           # Hồ sơ cá nhân & tra cứu quy chuẩn
-│
-└── widgets/                           # Thành phần giao diện tái sử dụng
-    └── plant_preset_dropdown.dart     # Menu chọn cây trồng & giai đoạn
+├── lib/                               # Tầng Ứng dụng Di động (Flutter Client)
+│   ├── main.dart                      # Khởi chạy app, Crashlytics & FCM Background Handler
+│   ├── firebase_options.dart          # Cấu hình Firebase đa nền tảng
+│   │
+│   ├── models/                        # Tầng dữ liệu & AI (Data & AI Layer)
+│   │   ├── fuzzy_logic_engine.dart    # Bộ máy suy diễn mờ Mamdani Native Dart (0ms)
+│   │   ├── ai_evaluation_model.dart   # Mô hình kết quả đánh giá AI
+│   │   ├── crop_preset_model.dart     # Mô hình cây trồng & giai đoạn sinh trưởng
+│   │   ├── farm_model.dart            # Mô hình nông trại & dữ liệu cảm biến
+│   │   ├── plant_preset_manager.dart  # Quản lý bộ quy chuẩn cây trồng
+│   │   └── user_model.dart            # Mô hình thông tin người dùng
+│   │
+│   ├── services/                      # Tầng dịch vụ (Service Layer)
+│   │   ├── rtdb_service.dart          # Dịch vụ luồng dữ liệu Realtime Database
+│   │   ├── firestore_service.dart     # Quản lý Firestore & FCM Device Tokens
+│   │   ├── auth_service.dart          # Xác thực & xoá tài khoản Firebase Auth
+│   │   └── notification_service.dart  # Quản lý thông báo cục bộ & thiết lập FCM
+│   │
+│   ├── screens/                       # Tầng giao diện (Presentation Layer)
+│   │   ├── login_screen.dart          # Màn hình đăng nhập
+│   │   ├── register_screen.dart       # Màn hình đăng ký
+│   │   ├── verify_email_screen.dart   # Màn hình xác thực email
+│   │   ├── main_tab_screen.dart       # Thanh điều hướng chính (4 tab)
+│   │   ├── provision_screen.dart      # Cấu hình Wi-Fi cho ESP32 qua Access Point
+│   │   └── tabs/
+│   │       ├── dashboard_tab.dart     # Bảng điều khiển tổng quan
+│   │       ├── farms_tab.dart         # Quản lý nông trại & cảm biến
+│   │       ├── alerts_tab.dart        # Nhật ký cảnh báo & phân tích chuyên sâu
+│   │       └── profile_tab.dart       # Hồ sơ cá nhân, đổi tần suất cảnh báo
+│   │
+│   └── widgets/                       # Thành phần giao diện tái sử dụng
+│       └── plant_preset_dropdown.dart # Menu chọn cây trồng & giai đoạn sinh trưởng
 ```
 
 ### 4.2. Bộ máy suy diễn mờ (`FuzzyLogicEngine`)
@@ -206,6 +213,15 @@ Dữ liệu quy chuẩn được lưu tại `assets/plant_presets.txt` dưới �
 - **Thông tin cây trồng:** Mã cây, tên cây, khoảng pH đất tối ưu.
 - **Giai đoạn sinh trưởng:** Mỗi giai đoạn gồm khoảng tối ưu của nhiệt độ, độ ẩm đất, độ ẩm không khí, cường độ ánh sáng (lux), và ghi chú nông học chuyên sâu.
 
+### 4.5. Cơ chế Cảnh báo Đám mây 24/7 (Firebase Cloud Functions & FCM)
+
+Để khắc phục hạn chế hệ điều hành di động (Android / iOS) tạm dừng app khi tắt màn hình, hệ thống trang bị bộ xử lý serverless 24/7:
+
+1. **Trigger tự động:** Cloud Function lắng nghe đường dẫn `/sensors/{uid}/{farmId}/{sensorId}` trên Firebase Realtime Database.
+2. **Phân tích ngưỡng:** Đánh giá ngay lập tức các chỉ số môi trường (Nhiệt độ, Độ ẩm đất/KK, pH, Ánh sáng) khi có dữ liệu mới.
+3. **Chống lặp (Cooldown):** Kiểm tra thời điểm gửi thông báo gần nhất để tránh spam thông báo liên tục (giãn cách tối thiểu 3 phút).
+4. **Push Notification:** Gửi tin nhắn cảnh báo qua **Firebase Cloud Messaging (FCM)** trực tiếp đến `fcmToken` của thiết bị người dùng.
+
 ---
 
 ## 5. Hướng dẫn cài đặt và vận hành
@@ -214,15 +230,18 @@ Dữ liệu quy chuẩn được lưu tại `assets/plant_presets.txt` dưới �
 
 - Flutter SDK phiên bản 3.12.0 trở lên
 - Dart SDK phiên bản 3.0.0 trở lên
-- Android Studio hoặc Visual Studio Code có cài đặt Flutter Plugin
+- Node.js phiên bản 18+ (phục vụ Firebase Cloud Functions)
+- Firebase CLI (`npm install -g firebase-tools`)
+- Android Studio hoặc Visual Studio Code
 - Thiết bị di động thực hoặc trình giả lập (Android Emulator / iOS Simulator)
 
 ### 5.2. Các bước triển khai
 
+#### 1. Triển khai Ứng dụng Di động (Flutter App):
 ```bash
 # 1. Clone mã nguồn
 git clone https://github.com/THEWAZARUDO/greenpulse.git
-cd greenpulse_app
+cd greenpulse
 
 # 2. Cài đặt các gói phụ thuộc
 flutter pub get
@@ -230,9 +249,19 @@ flutter pub get
 # 3. Kiểm tra tính đúng đắn của mã nguồn
 flutter analyze
 
-# 4. Chạy ứng dụng trên thiết bị/giả lập
+# 4. Chạy ứng dụng trên thiết bị Android / Giả lập
 flutter run
 ```
+
+#### 2. Triển khai Đám mây 24/7 (Firebase Cloud Functions):
+```bash
+# 1. Đăng nhập Firebase
+firebase login
+
+# 2. Triển khai Cloud Function lên dự án Firebase
+firebase deploy --only functions
+```
+
 
 ### 5.3. Kiểm thử không cần phần cứng
 

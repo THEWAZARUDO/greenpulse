@@ -52,6 +52,9 @@ class _MainTabScreenState extends State<MainTabScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
+    // Kích hoạt Firebase Cloud Messaging (FCM) nhận Push Notification 24/7
+    NotificationService().setupFCM(user.uid);
+
     _farmsSub = _firestoreService.watchFarms(user.uid).listen((farms) {
       final currentFarmIds = farms.map((f) => f.id).toSet();
       _sensorSubs.removeWhere((id, sub) {

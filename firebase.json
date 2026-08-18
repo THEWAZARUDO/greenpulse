@@ -1,1 +1,38 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"greenpulse-daklak","appId":"1:532025211449:android:1583822d9b217e658b6be8","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"greenpulse-daklak","configurations":{"android":"1:532025211449:android:1583822d9b217e658b6be8","ios":"1:532025211449:ios:a97de3dd9e8bb5148b6be8","macos":"1:532025211449:ios:a97de3dd9e8bb5148b6be8","web":"1:532025211449:web:2577a4ad18b303508b6be8","windows":"1:532025211449:web:1cb6a7bb6add2b068b6be8"}}}}}}
+{
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ],
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "greenpulse-daklak",
+          "appId": "1:532025211449:android:1583822d9b217e658b6be8",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "greenpulse-daklak",
+          "configurations": {
+            "android": "1:532025211449:android:1583822d9b217e658b6be8",
+            "ios": "1:532025211449:ios:a97de3dd9e8bb5148b6be8",
+            "macos": "1:532025211449:ios:a97de3dd9e8bb5148b6be8",
+            "web": "1:532025211449:web:2577a4ad18b303508b6be8",
+            "windows": "1:532025211449:web:1cb6a7bb6add2b068b6be8"
+          }
+        }
+      }
+    }
+  }
+}

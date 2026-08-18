@@ -41,6 +41,26 @@ class FirestoreService {
     } catch (_) {}
   }
 
+  /// Lưu FCM Device Token phục vụ Push Notification 24/7 từ Cloud Function
+  Future<void> saveFcmToken(String uid, String token) async {
+    try {
+      await _db.collection('users').doc(uid).set({
+        'fcmToken': token,
+        'fcmUpdatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (_) {}
+  }
+
+  /// Xóa FCM Token khi người dùng đăng xuất
+  Future<void> deleteFcmToken(String uid) async {
+    try {
+      await _db.collection('users').doc(uid).update({
+        'fcmToken': FieldValue.delete(),
+      });
+    } catch (_) {}
+  }
+
+
   // ─── Farms CRUD ────────────────────────────────────────────────────────────
   /// Lấy danh sách farms của user (một lần).
   Future<List<FarmModel>> getFarms(String uid) async {

@@ -1,8 +1,19 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../models/farm_model.dart';
+import 'firestore_service.dart';
 
-/// Notification Service: Quản lý thông báo đẩy cục bộ trên điện thoại & thiết bị.
+/// Hàm xử lý FCM Push Notification chạy nền khi ứng dụng bị đóng (Terminated/Background)
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  debugPrint('[FCM Background] Đã nhận thông báo Push 24/7: ${message.notification?.title ?? message.data}');
+}
+
+/// Notification Service: Quản lý thông báo đẩy cục bộ & Firebase Cloud Messaging (FCM 24/7).
 /// Hỗ trợ cấu hình tần suất thông báo linh hoạt (1 đến 10 phút/lần).
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -11,6 +22,7 @@ class NotificationService {
 
   final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
+  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
 
   bool _initialized = false;
   final Map<String, DateTime> _lastNotificationPerSensor = {};
@@ -35,7 +47,7 @@ class NotificationService {
     }
   }
 
-  /// Khởi tạo kênh thông báo
+  /// Khởi tạo kênh thông báo cục bộ
   Future<void> init() async {
     if (_initialized) return;
 
@@ -83,6 +95,54 @@ class NotificationService {
       _initialized = true;
     } catch (e) {
       debugPrint('Lỗi khởi tạo NotificationService: $e');
+    }
+  }
+
+  /// Khởi tạo Firebase Cloud Messaging (FCM) để nhận Push Notification 24/7
+  Future<void> setupFCM(String uid) async {
+    try {
+      // 1. Yêu cầu cấp quyền thông báo từ người dùng
+      final settings = await _fcm.requestPermission(
+        alert: true,
+        announcement: false,
+        badge: true,
+        carPlay: false,
+        criticalAlert: false,
+        provisional: false,
+        sound: true,
+      );
+
+      if (settings.authorizationStatus == AuthorizationStatus.authorized ||
+          settings.authorizationStatus == AuthorizationStatus.provisional) {
+        debugPrint('[FCM] Người dùng đã cấp quyền thông báo.');
+      }
+
+      // 2. Lấy FCM Device Token của máy và lưu lên Firestore
+      final token = await _fcm.getToken();
+      if (token != null) {
+        debugPrint('[FCM Device Token]: $token');
+        await FirestoreService().saveFcmToken(uid, token);
+      }
+
+      // 3. Tự động cập nhật Token khi Firebase cấp mới (Token Refresh)
+      _fcm.onTokenRefresh.listen((newToken) {
+        FirestoreService().saveFcmToken(uid, newToken);
+      });
+
+      // 4. Lắng nghe thông báo khi ứng dụng ĐANG MỞ (Foreground)
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        debugPrint('[FCM Foreground Message]: ${message.notification?.title}');
+        final notification = message.notification;
+        if (notification != null) {
+          showNotification(
+            title: notification.title ?? 'Cảnh báo Nông nghiệp',
+            body: notification.body ?? '',
+            payload: jsonEncode(message.data),
+          );
+        }
+      });
+    } catch (e) {
+      debugPrint('[FCM Setup Error]: $e');
     }
   }
 
@@ -177,3 +237,4 @@ class NotificationService {
     );
   }
 }
+
