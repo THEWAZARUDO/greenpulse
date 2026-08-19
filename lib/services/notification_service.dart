@@ -98,6 +98,39 @@ class NotificationService {
     }
   }
 
+  /// Yêu cầu cấp quyền thông báo từ hệ điều hành (Android 13+ & iOS)
+  Future<bool> requestPermissions() async {
+    try {
+      // 1. Xin quyền qua FlutterLocalNotificationsPlugin (Android 13+)
+      final androidPlatform = _notificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      if (androidPlatform != null) {
+        final granted = await androidPlatform.requestNotificationsPermission();
+        debugPrint('[NotificationService] Android local notification permission: $granted');
+      }
+
+      // 2. Xin quyền qua Firebase Messaging (iOS & Android)
+      final settings = await _fcm.requestPermission(
+        alert: true,
+        announcement: false,
+        badge: true,
+        carPlay: false,
+        criticalAlert: false,
+        provisional: false,
+        sound: true,
+      );
+      debugPrint('[NotificationService] FCM AuthorizationStatus: ${settings.authorizationStatus}');
+      return settings.authorizationStatus == AuthorizationStatus.authorized ||
+          settings.authorizationStatus == AuthorizationStatus.provisional;
+    } catch (e) {
+      debugPrint('[NotificationService] Lỗi xin quyền thông báo: $e');
+      return false;
+    }
+  }
+
+
   /// Khởi tạo Firebase Cloud Messaging (FCM) để nhận Push Notification 24/7
   Future<void> setupFCM(String uid) async {
     try {

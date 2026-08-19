@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/notification_service.dart';
 import 'register_screen.dart';
 
 /// Màn hình đăng nhập – kết nối thật với Firebase Auth.
@@ -30,10 +31,16 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   void initState() {
     super.initState();
+    // Yêu cầu quyền thông báo ngay khi giao diện hiển thị
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      NotificationService().requestPermissions();
+    });
+
     _animCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
+
     _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
     _slideAnim = Tween<Offset>(
       begin: const Offset(0, 0.25),
