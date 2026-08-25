@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/farm_model.dart';
+import '../../models/weather_model.dart';
 import '../../services/firestore_service.dart';
 import '../../services/rtdb_service.dart';
 import '../provision_screen.dart';
 import '../../widgets/plant_preset_dropdown.dart';
+import '../../widgets/location_picker_dialog.dart';
 
 class FarmsTab extends StatelessWidget {
   const FarmsTab({super.key});
@@ -189,52 +191,118 @@ class FarmsTab extends StatelessWidget {
     FirestoreService firestoreService,
   ) {
     final ctrl = TextEditingController();
+    WeatherLocation? selectedLoc;
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'Thêm Nông Trại Mới',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: TextField(
-          controller: ctrl,
-          autofocus: true,
-          decoration: InputDecoration(
-            labelText: 'Tên nông trại',
-            hintText: 'VD: Trang trại Dâu Tây A',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            prefixIcon: const Icon(Icons.landscape_outlined),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text(
+            'Thêm Nông Trại Mới',
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Hủy'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              if (ctrl.text.trim().isEmpty) return;
-              Navigator.of(ctx).pop();
-              await firestoreService.addFarm(uid, ctrl.text.trim());
-              if (ctx.mounted) {
-                ScaffoldMessenger.of(ctx).showSnackBar(
-                  const SnackBar(
-                    content: Text('Đã thêm nông trại mới!'),
-                    backgroundColor: Color(0xFF2E7D32),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: ctrl,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    labelText: 'Tên nông trại',
+                    hintText: 'VD: Trang trại Dâu Tây A',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    prefixIcon: const Icon(Icons.landscape_outlined),
                   ),
-                );
-              }
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF2E7D32),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
+                ),
+                const SizedBox(height: 14),
+                // Chọn vị trí địa lý
+                const Text(
+                  'Khu vực địa lý (để dự báo thời tiết):',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black54),
+                ),
+                const SizedBox(height: 6),
+                InkWell(
+                  onTap: () async {
+                    final loc = await LocationPickerDialog.show(
+                      context,
+                      currentLocation: selectedLoc,
+                    );
+                    if (loc != null) {
+                      setModalState(() {
+                        selectedLoc = loc;
+                      });
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F8F1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFC8E6C9)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.place, color: Color(0xFF2E7D32), size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            selectedLoc != null
+                                ? selectedLoc!.displayName
+                                : 'Chạm để chọn tỉnh/thành (mặc định: Đà Lạt)',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: selectedLoc != null ? Colors.black87 : Colors.grey.shade600,
+                              fontWeight: selectedLoc != null ? FontWeight.w600 : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                        const Icon(Icons.keyboard_arrow_right, color: Colors.grey, size: 18),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-            child: const Text('Thêm'),
           ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Hủy'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                if (ctrl.text.trim().isEmpty) return;
+                Navigator.of(ctx).pop();
+                await firestoreService.addFarm(
+                  uid,
+                  ctrl.text.trim(),
+                  locationName: selectedLoc?.name,
+                  latitude: selectedLoc?.latitude,
+                  longitude: selectedLoc?.longitude,
+                );
+                if (ctx.mounted) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    const SnackBar(
+                      content: Text('Đã thêm nông trại mới!'),
+                      backgroundColor: Color(0xFF2E7D32),
+                    ),
+                  );
+                }
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF2E7D32),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text('Thêm'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -296,14 +364,39 @@ class _FarmManagementCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Text(
-                    farm.name,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                    overflow: TextOverflow.ellipsis,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        farm.name,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (farm.locationName != null && farm.locationName!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.place, color: Colors.white70, size: 11),
+                              const SizedBox(width: 3),
+                              Flexible(
+                                child: Text(
+                                  farm.locationName!,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.white70,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
                   ),
                 ),
                 // Edit / Delete buttons
@@ -456,38 +549,114 @@ class _FarmManagementCard extends StatelessWidget {
 
   void _showEditFarmDialog(BuildContext context) {
     final ctrl = TextEditingController(text: farm.name);
+    WeatherLocation? selectedLoc = farm.locationName != null && farm.latitude != null && farm.longitude != null
+        ? WeatherLocation(
+            name: farm.locationName!,
+            latitude: farm.latitude!,
+            longitude: farm.longitude!,
+          )
+        : null;
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Đổi tên Nông trại'),
-        content: TextField(
-          controller: ctrl,
-          decoration: InputDecoration(
-            labelText: 'Tên mới',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text(
+            'Cập nhật Nông trại',
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Hủy'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              if (ctrl.text.trim().isEmpty) return;
-              Navigator.of(ctx).pop();
-              await firestoreService.updateFarm(uid, farm.id, ctrl.text.trim());
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF2E7D32),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: ctrl,
+                  decoration: InputDecoration(
+                    labelText: 'Tên nông trại',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    prefixIcon: const Icon(Icons.landscape_outlined),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                const Text(
+                  'Khu vực địa lý (dự báo thời tiết):',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black54),
+                ),
+                const SizedBox(height: 6),
+                InkWell(
+                  onTap: () async {
+                    final loc = await LocationPickerDialog.show(
+                      context,
+                      currentLocation: selectedLoc,
+                    );
+                    if (loc != null) {
+                      setModalState(() {
+                        selectedLoc = loc;
+                      });
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F8F1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFC8E6C9)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.place, color: Color(0xFF2E7D32), size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            selectedLoc != null
+                                ? selectedLoc!.displayName
+                                : 'Chưa chọn vị trí (Chạm để chọn)',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: selectedLoc != null ? Colors.black87 : Colors.grey.shade600,
+                              fontWeight: selectedLoc != null ? FontWeight.w600 : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                        const Icon(Icons.keyboard_arrow_right, color: Colors.grey, size: 18),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-            child: const Text('Lưu'),
           ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Hủy'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                if (ctrl.text.trim().isEmpty) return;
+                Navigator.of(ctx).pop();
+                await firestoreService.updateFarm(
+                  uid,
+                  farm.id,
+                  ctrl.text.trim(),
+                  locationName: selectedLoc?.name,
+                  latitude: selectedLoc?.latitude,
+                  longitude: selectedLoc?.longitude,
+                );
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF2E7D32),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text('Lưu'),
+            ),
+          ],
+        ),
       ),
     );
   }

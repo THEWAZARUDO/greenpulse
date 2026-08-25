@@ -36,38 +36,9 @@ Hệ thống hiện hỗ trợ 4 loại cây trồng chủ lực vùng Tây Nguy
 
 ## 2. Cơ sở lý thuyết
 
-### 2.1. Logic Mờ (Fuzzy Logic)
+### 2.1 
 
-Logic Mờ là một phương pháp toán học cho phép xử lý thông tin mang tính không chắc chắn, mô phỏng quá trình suy luận của con người thông qua các tập mờ (Fuzzy Sets) và luật suy diễn mờ (Fuzzy Rules). Khác với logic nhị phân (đúng/sai), logic mờ cho phép một phần tử thuộc về một tập hợp với một "độ thuộc" (membership degree) nằm trong khoảng [0, 1].
-
-### 2.2. Hệ suy diễn mờ Mamdani
-
-Hệ thống GreenPulse sử dụng mô hình suy diễn Mamdani gồm 4 giai đoạn:
-
-1. **Mờ hóa (Fuzzification):** Chuyển đổi giá trị đầu vào crisp sang độ thuộc tập mờ thông qua hàm thuộc.
-2. **Cơ sở luật (Rule Base):** Tập hợp các luật IF-THEN dạng: "Nếu Nhiệt độ là *Cao* VÀ Độ ẩm đất là *Thấp* THÌ Nguy cơ là *Cao*".
-3. **Suy diễn (Inference):** Áp dụng phép toán Min (T-norm) cho mệnh đề tiền đề và cắt hàm thuộc đầu ra.
-4. **Giải mờ (Defuzzification):** Chuyển đổi tập mờ đầu ra thành giá trị crisp bằng phương pháp Trọng tâm (Centroid).
-
-### 2.3. Các hàm thuộc sử dụng
-
-Hệ thống sử dụng hai loại hàm thuộc:
-
-**Hàm thuộc Tam giác (Triangular):**
-
-$$\mu(x; a, b, c) = \max\left(\min\left(\frac{x - a}{b - a},\ \frac{c - x}{c - b}\right),\ 0\right)$$
-
-**Hàm thuộc Hình thang (Trapezoidal):**
-
-$$\mu(x; a, b, c, d) = \max\left(\min\left(\frac{x - a}{b - a},\ 1,\ \frac{d - x}{d - c}\right),\ 0\right)$$
-
-### 2.4. Phương pháp Giải mờ Trọng tâm (Centroid Defuzzification)
-
-Điểm nguy cơ đầu ra được tính theo công thức trọng tâm trên lưới rời rạc 200 điểm:
-
-$$z^* = \frac{\sum_{i=1}^{N} z_i \cdot \mu(z_i)}{\sum_{i=1}^{N} \mu(z_i)}, \quad N = 200, \quad z_i \in [0, 100]$$
-
-Trong đó $z^*$ là điểm nguy cơ đầu ra (Risk Score), $z_i$ là giá trị trên lưới rời rạc, và $\mu(z_i)$ là độ thuộc tổng hợp tại điểm $z_i$.
+### 2.1. Logic mờ
 
 ---
 

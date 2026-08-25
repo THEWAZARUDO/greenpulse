@@ -83,23 +83,48 @@ class FirestoreService {
   }
 
   /// Thêm nông trại mới
-  Future<String> addFarm(String uid, String farmName) async {
+  Future<String> addFarm(
+    String uid,
+    String farmName, {
+    String? locationName,
+    double? latitude,
+    double? longitude,
+  }) async {
     final ref = _db.collection('users').doc(uid).collection('farms').doc();
-    await ref.set({
+    final data = <String, dynamic>{
       'name': farmName.trim(),
       'createdAt': FieldValue.serverTimestamp(),
-    });
+    };
+    if (locationName != null) data['locationName'] = locationName;
+    if (latitude != null) data['latitude'] = latitude;
+    if (longitude != null) data['longitude'] = longitude;
+
+    await ref.set(data);
     return ref.id;
   }
 
-  /// Đổi tên nông trại
-  Future<void> updateFarm(String uid, String farmId, String newName) async {
+  /// Đổi tên và cập nhật vị trí nông trại
+  Future<void> updateFarm(
+    String uid,
+    String farmId,
+    String newName, {
+    String? locationName,
+    double? latitude,
+    double? longitude,
+  }) async {
+    final data = <String, dynamic>{
+      'name': newName.trim(),
+    };
+    if (locationName != null) data['locationName'] = locationName;
+    if (latitude != null) data['latitude'] = latitude;
+    if (longitude != null) data['longitude'] = longitude;
+
     await _db
         .collection('users')
         .doc(uid)
         .collection('farms')
         .doc(farmId)
-        .update({'name': newName.trim()});
+        .update(data);
   }
 
   /// Xóa nông trại

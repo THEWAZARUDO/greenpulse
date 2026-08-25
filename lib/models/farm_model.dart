@@ -191,10 +191,33 @@ class SensorData {
 class FarmModel {
   final String id;
   final String name;
-  const FarmModel({required this.id, required this.name});
+  final String? locationName;
+  final double? latitude;
+  final double? longitude;
+
+  const FarmModel({
+    required this.id,
+    required this.name,
+    this.locationName,
+    this.latitude,
+    this.longitude,
+  });
+
   factory FarmModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>? ?? {};
-    return FarmModel(id: doc.id, name: data['name'] as String? ?? doc.id);
+    return FarmModel(
+      id: doc.id,
+      name: data['name'] as String? ?? doc.id,
+      locationName: data['locationName'] as String?,
+      latitude: (data['latitude'] as num?)?.toDouble(),
+      longitude: (data['longitude'] as num?)?.toDouble(),
+    );
   }
-  Map<String, dynamic> toMap() => {'name': name};
+
+  Map<String, dynamic> toMap() => {
+        'name': name,
+        if (locationName != null) 'locationName': locationName,
+        if (latitude != null) 'latitude': latitude,
+        if (longitude != null) 'longitude': longitude,
+      };
 }

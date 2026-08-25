@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/farm_model.dart';
 import '../../models/user_model.dart';
+import '../../models/weather_model.dart';
 import '../../models/plant_preset_manager.dart';
 import '../../services/firestore_service.dart';
 import '../../services/rtdb_service.dart';
+import '../../services/weather_service.dart';
+import '../../widgets/weather_card.dart';
 
 class DashboardTab extends StatelessWidget {
   const DashboardTab({super.key});
@@ -157,6 +160,14 @@ class DashboardTab extends StatelessWidget {
                   ),
                 ),
               ),
+            ),
+          ),
+
+          // ── Weather Forecast Banner ──────────────────────────────────
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: WeatherCard(),
             ),
           ),
 
@@ -376,14 +387,60 @@ class _FarmDashboardCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Text(
-                    farm.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                    overflow: TextOverflow.ellipsis,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        farm.name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (farm.locationName != null && farm.locationName!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: InkWell(
+                            onTap: () {
+                              if (farm.latitude != null && farm.longitude != null) {
+                                WeatherService.instance.setCurrentLocation(
+                                  WeatherLocation(
+                                    name: farm.locationName!,
+                                    latitude: farm.latitude!,
+                                    longitude: farm.longitude!,
+                                  ),
+                                );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Đang xem thời tiết: ${farm.locationName}'),
+                                    duration: const Duration(seconds: 2),
+                                    backgroundColor: const Color(0xFF1B5E20),
+                                  ),
+                                );
+                              }
+                            },
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.place, color: Colors.white70, size: 12),
+                                const SizedBox(width: 3),
+                                Flexible(
+                                  child: Text(
+                                    farm.locationName!,
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 11,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ],

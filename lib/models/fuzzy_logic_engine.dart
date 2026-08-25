@@ -85,7 +85,6 @@ class FuzzyLogicEngine {
     };
   }
 
-  /// ĐÁNH GIÁ CẢM BIẾN THUẦN DART (0.0ms Exec Time)
   static AiEvaluationResult evaluate(SensorData duLieuCamBien) {
     final cayTrong = PlantPresetManager.getCropById(duLieuCamBien.cropId);
     final giaiDoan = cayTrong?.getStageById(duLieuCamBien.stageId);
@@ -251,7 +250,7 @@ class FuzzyLogicEngine {
       adviceList: danhSachLoiKhuyen,
       cropName: tenCayTrong,
       stageName: tenGiaiDoan,
-      isOfflineFallback: false, // Thật 100% Native Edge AI
+      isOfflineFallback: false,
     );
   }
 }
