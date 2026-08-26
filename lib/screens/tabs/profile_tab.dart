@@ -277,8 +277,8 @@ class ProfileTab extends StatelessWidget {
                                         color: Color(0xFF1B5E20),
                                       ),
                                       items: List.generate(
-                                        10,
-                                        (index) => index + 1,
+                                        6,
+                                        (index) => (index + 1)*5,
                                       ).map((min) {
                                         return DropdownMenuItem<int>(
                                           value: min,
