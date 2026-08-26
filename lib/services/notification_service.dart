@@ -27,7 +27,7 @@ class NotificationService {
   bool _initialized = false;
   final Map<String, DateTime> _lastNotificationPerSensor = {};
   DateTime? _lastGlobalNotificationTime;
-  int _alertFrequencyMinutes = 1;
+  int _alertFrequencyMinutes = 5;
 
   static const String channelId = 'greenpulse_alerts_channel';
   static const String channelName = 'Cảnh báo Nông nghiệp GreenPulse';
@@ -40,8 +40,6 @@ class NotificationService {
   void setAlertFrequencyMinutes(int minutes) {
     if (minutes < 1) {
       _alertFrequencyMinutes = 1;
-    } else if (minutes > 10) {
-      _alertFrequencyMinutes = 10;
     } else {
       _alertFrequencyMinutes = minutes;
     }
