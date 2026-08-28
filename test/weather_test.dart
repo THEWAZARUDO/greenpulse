@@ -156,19 +156,24 @@ void main() {
       SharedPreferences.setMockInitialValues({});
     });
 
-    test('removeDiacritics strips accents accurately', () {
+    test('removeDiacritics strips accents accurately and supports toLowerCase', () {
       expect(WeatherService.removeDiacritics('Đắk Lắk'), equals('Dak Lak'));
+      expect(WeatherService.removeDiacritics('ĐẮK LẮK', toLowerCase: true), equals('dak lak'));
       expect(WeatherService.removeDiacritics('Buôn Ma Thuột'), equals('Buon Ma Thuot'));
+      expect(WeatherService.removeDiacritics('BUÔN MA THUỘT', toLowerCase: true), equals('buon ma thuot'));
       expect(WeatherService.removeDiacritics('Krông Pắc'), equals('Krong Pac'));
       expect(WeatherService.removeDiacritics('Ea H\'leo'), equals('Ea H\'leo'));
     });
 
-    test('searchLocations finds Ea Kar when typing "Eakar" or "Eakar/Đắk Lắk"', () async {
+    test('searchLocations finds Ea Kar when typing "Eakar", "Eakar/Đắk Lắk", or "EAKAR/DAKLAK"', () async {
       final results1 = await WeatherService.instance.searchLocations('Eakar');
       expect(results1.any((loc) => loc.name.toLowerCase().contains('ea kar')), isTrue);
 
       final results2 = await WeatherService.instance.searchLocations('Eakar/Đắk Lắk');
       expect(results2.any((loc) => loc.name.toLowerCase().contains('ea kar')), isTrue);
+
+      final results3 = await WeatherService.instance.searchLocations('EAKAR/DAKLAK');
+      expect(results3.any((loc) => loc.name.toLowerCase().contains('ea kar')), isTrue);
     });
 
     test('addRecentLocation maintains max 10 entries and moves newest to top', () async {

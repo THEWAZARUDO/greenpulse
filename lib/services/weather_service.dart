@@ -328,7 +328,7 @@ class WeatherService {
   }
 
   /// Hàm loại bỏ dấu tiếng Việt để so sánh tìm kiếm thông minh
-  static String removeDiacritics(String str) {
+  static String removeDiacritics(String str, {bool toLowerCase = false}) {
     const vietnameseMap = {
       'a': 'áàảãạăắằẳẵặâấầẩẫậ',
       'A': 'ÁÀẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬ',
@@ -351,7 +351,7 @@ class WeatherService {
         result = result.replaceAll(diacritics[i], nonDiacritic);
       }
     });
-    return result;
+    return toLowerCase ? result.toLowerCase() : result;
   }
 
   /// Lấy dự báo thời tiết từ Open-Meteo API
