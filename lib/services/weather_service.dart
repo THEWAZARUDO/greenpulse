@@ -373,7 +373,7 @@ class WeatherService {
       'https://api.open-meteo.com/v1/forecast'
       '?latitude=${targetLoc.latitude}'
       '&longitude=${targetLoc.longitude}'
-      '&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,surface_pressure'
+      '&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,surface_pressure,uv_index'
       '&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,weather_code,is_day,uv_index'
       '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,uv_index_max'
       '&timezone=auto',

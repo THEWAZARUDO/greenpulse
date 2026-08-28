@@ -86,11 +86,14 @@ class CurrentWeather {
     Map<String, dynamic> current,
     Map<String, dynamic>? hourly,
   ) {
-    // Lấy UV index hiện tại từ hourly nếu có
-    double currentUv = 0.0;
-    if (hourly != null && hourly['uv_index'] is List) {
+    // Lấy UV index hiện tại từ current hoặc hourly nếu có
+    double currentUv = (current['uv_index'] as num?)?.toDouble() ?? 0.0;
+    if (currentUv == 0.0 && hourly != null && hourly['uv_index'] is List) {
       final List uvList = hourly['uv_index'];
-      if (uvList.isNotEmpty) {
+      final nowHour = DateTime.now().hour;
+      if (uvList.length > nowHour) {
+        currentUv = (uvList[nowHour] as num?)?.toDouble() ?? 0.0;
+      } else if (uvList.isNotEmpty) {
         currentUv = (uvList.first as num?)?.toDouble() ?? 0.0;
       }
     }
