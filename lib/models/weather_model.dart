@@ -40,7 +40,23 @@ class WeatherLocation {
         'latitude': latitude,
         'longitude': longitude,
       };
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is WeatherLocation &&
+        other.name.toLowerCase() == name.toLowerCase() &&
+        (other.latitude - latitude).abs() < 0.01 &&
+        (other.longitude - longitude).abs() < 0.01;
+  }
+
+  @override
+  int get hashCode =>
+      name.toLowerCase().hashCode ^
+      (latitude * 100).round().hashCode ^
+      (longitude * 100).round().hashCode;
 }
+
 
 /// Thông tin thời tiết hiện tại
 class CurrentWeather {

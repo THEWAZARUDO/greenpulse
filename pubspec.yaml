@@ -45,6 +45,7 @@ dependencies:
   firebase_crashlytics: ^5.2.7
   firebase_analytics: ^12.4.6
   firebase_messaging: ^16.1.1
+  shared_preferences: ^2.5.5
 
 dev_dependencies:
   flutter_test:

@@ -11,6 +11,7 @@ import 'screens/main_tab_screen.dart';
 import 'screens/verify_email_screen.dart';
 
 import 'services/notification_service.dart';
+import 'services/weather_service.dart';
 import 'models/plant_preset_manager.dart';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -38,8 +39,10 @@ void main() async {
 
   await NotificationService().init();
   await PlantPresetManager.loadPresets();
+  await WeatherService.instance.init();
   runApp(const MyApp());
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

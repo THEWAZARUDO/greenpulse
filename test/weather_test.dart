@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:greenpulse/models/weather_model.dart';
+import 'package:greenpulse/services/weather_service.dart';
 
 void main() {
   group('WeatherLocation Tests', () {
@@ -147,4 +149,53 @@ void main() {
       expect(tips.any((t) => t.contains('Nắng gắt nhiệt độ cao')), isTrue);
     });
   });
+
+  group('WeatherService Smart Search & Persistence Tests', () {
+    setUp(() {
+      TestWidgetsFlutterBinding.ensureInitialized();
+      SharedPreferences.setMockInitialValues({});
+    });
+
+    test('removeDiacritics strips accents accurately', () {
+      expect(WeatherService.removeDiacritics('Đắk Lắk'), equals('Dak Lak'));
+      expect(WeatherService.removeDiacritics('Buôn Ma Thuột'), equals('Buon Ma Thuot'));
+      expect(WeatherService.removeDiacritics('Krông Pắc'), equals('Krong Pac'));
+      expect(WeatherService.removeDiacritics('Ea H\'leo'), equals('Ea H\'leo'));
+    });
+
+    test('searchLocations finds Ea Kar when typing "Eakar" or "Eakar/Đắk Lắk"', () async {
+      final results1 = await WeatherService.instance.searchLocations('Eakar');
+      expect(results1.any((loc) => loc.name.toLowerCase().contains('ea kar')), isTrue);
+
+      final results2 = await WeatherService.instance.searchLocations('Eakar/Đắk Lắk');
+      expect(results2.any((loc) => loc.name.toLowerCase().contains('ea kar')), isTrue);
+    });
+
+    test('addRecentLocation maintains max 10 entries and moves newest to top', () async {
+      final service = WeatherService.instance;
+      await service.clearRecentLocations();
+      expect(service.recentLocations.isEmpty, isTrue);
+
+      for (int i = 1; i <= 12; i++) {
+        await service.addRecentLocation(
+          WeatherLocation(
+            name: 'Địa điểm $i',
+            admin1: 'Tỉnh $i',
+            latitude: 10.0 + i * 0.1,
+            longitude: 105.0 + i * 0.1,
+          ),
+        );
+      }
+
+      expect(service.recentLocations.length, equals(10));
+      expect(service.recentLocations.first.name, equals('Địa điểm 12'));
+
+      // Test removing an item
+      final toRemove = service.recentLocations.first;
+      await service.removeRecentLocation(toRemove);
+      expect(service.recentLocations.length, equals(9));
+      expect(service.recentLocations.any((loc) => loc.name == 'Địa điểm 12'), isFalse);
+    });
+  });
 }
+

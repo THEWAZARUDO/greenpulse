@@ -10,12 +10,11 @@
 ---
 
 ## 1. Kiến trúc Hệ thống (System Architecture)
-
 GreenPulse vận hành theo mô hình **Dual-Engine Architecture**:
 
 ```
  ┌──────────────────────┐         ┌───────────────────────────┐         ┌───────────────────────────┐
- │    ESP32 / Sensors   │────────▶│  Firebase Realtime DB     │────────▶│    Flutter Mobile App     │
+ │    ESP32 / Sensors   │───────▶│  Firebase Realtime DB     │───────▶│    Flutter Mobile App     │
  │  (Temp, Hum, Soil,   │  WiFi   │  (users/{uid}/farms/...)  │  Stream │  - Edge AI Mamdani (0ms)  │
  │   Light, pH)         │         └─────────────┬─────────────┘         │  - Open-Meteo Forecast    │
  └──────────────────────┘                       │                       │  - Farm & Sensor Controls │
