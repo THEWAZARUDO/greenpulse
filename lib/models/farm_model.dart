@@ -46,6 +46,11 @@ class SensorData {
   final double soil;
   final double temperature;
   final double ph;
+  final bool hasHumidity;
+  final bool hasLight;
+  final bool hasSoil;
+  final bool hasTemperature;
+  final bool hasPh;
   final String? cropId;
   final int stageId;
   final DateTime? plantingDate;
@@ -59,12 +64,32 @@ class SensorData {
     required this.soil,
     required this.temperature,
     this.ph = 6.5,
+    this.hasHumidity = true,
+    this.hasLight = true,
+    this.hasSoil = true,
+    this.hasTemperature = true,
+    this.hasPh = true,
     this.cropId,
     this.stageId = 1,
     this.plantingDate,
     this.aiEvaluation,
     this.extra = const {},
   });
+
+  /// Kiểm tra xem cảm biến có ít nhất 1 giá trị đo gửi về hay không
+  bool get isSensorOnline =>
+      hasHumidity || hasLight || hasSoil || hasTemperature || hasPh;
+
+  /// Hàm ép kiểu số thực an toàn từ dynamic (hỗ trợ num, String, định dạng phẩy)
+  static double? tryParseDouble(dynamic val) {
+    if (val == null) return null;
+    if (val is num) return val.toDouble();
+    if (val is String) {
+      final clean = val.trim().replaceAll(',', '.');
+      return double.tryParse(clean);
+    }
+    return null;
+  }
 
   factory SensorData.fromMap(
     Map<String, dynamic> data, {
@@ -98,15 +123,32 @@ class SensorData {
     }
 
     final cropIdVal = (data['cropId'] ?? data['crop_id'] ?? data['plantName'])?.toString();
-    final stageIdVal = (data['stageId'] ?? data['stage_id'] as num?)?.toInt() ?? 1;
+    final stageRaw = data['stageId'] ?? data['stage_id'];
+    int stageIdVal = 1;
+    if (stageRaw is num) {
+      stageIdVal = stageRaw.toInt();
+    } else if (stageRaw is String) {
+      stageIdVal = int.tryParse(stageRaw.trim()) ?? 1;
+    }
+
+    final humVal = tryParseDouble(data['humidity']);
+    final lightVal = tryParseDouble(data['light']);
+    final soilVal = tryParseDouble(data['soil']);
+    final tempVal = tryParseDouble(data['temperature']);
+    final phVal = tryParseDouble(data['ph']);
 
     return SensorData(
       id: (data['id'] ?? id).toString(),
-      humidity: (data['humidity'] ?? 0).toDouble(),
-      light: (data['light'] ?? 0).toDouble(),
-      soil: (data['soil'] ?? 0).toDouble(),
-      temperature: (data['temperature'] ?? 0).toDouble(),
-      ph: (data['ph'] ?? 6.5).toDouble(),
+      humidity: humVal ?? 0.0,
+      light: lightVal ?? 0.0,
+      soil: soilVal ?? 0.0,
+      temperature: tempVal ?? 0.0,
+      ph: phVal ?? 6.5,
+      hasHumidity: humVal != null,
+      hasLight: lightVal != null,
+      hasSoil: soilVal != null,
+      hasTemperature: tempVal != null,
+      hasPh: phVal != null,
       cropId: cropIdVal,
       stageId: stageIdVal,
       plantingDate: pDate,
@@ -141,6 +183,11 @@ class SensorData {
     double? soil,
     double? temperature,
     double? ph,
+    bool? hasHumidity,
+    bool? hasLight,
+    bool? hasSoil,
+    bool? hasTemperature,
+    bool? hasPh,
     String? cropId,
     int? stageId,
     DateTime? plantingDate,
@@ -154,6 +201,11 @@ class SensorData {
       soil: soil ?? this.soil,
       temperature: temperature ?? this.temperature,
       ph: ph ?? this.ph,
+      hasHumidity: hasHumidity ?? this.hasHumidity,
+      hasLight: hasLight ?? this.hasLight,
+      hasSoil: hasSoil ?? this.hasSoil,
+      hasTemperature: hasTemperature ?? this.hasTemperature,
+      hasPh: hasPh ?? this.hasPh,
       cropId: cropId ?? this.cropId,
       stageId: stageId ?? this.stageId,
       plantingDate: plantingDate ?? this.plantingDate,
@@ -161,6 +213,7 @@ class SensorData {
       extra: extra ?? this.extra,
     );
   }
+
 
   StatusLevel get tempStatus =>
       aiEvaluation?.getParamStatus('temperature') ?? StatusLevel.normal;

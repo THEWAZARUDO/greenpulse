@@ -138,72 +138,85 @@ class _WeatherCardState extends State<WeatherCard> {
                         const Icon(Icons.location_on, color: Colors.white, size: 16),
                         const SizedBox(width: 6),
                         Expanded(
-                          child: GestureDetector(
-                            onTap: _openLocationPicker,
-                            child: Row(
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    data.location.displayName,
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                          child: Semantics(
+                            label: 'Vị trí hiện tại: ${data.location.displayName}. Nhấn để đổi vùng nông nghiệp.',
+                            button: true,
+                            child: GestureDetector(
+                              onTap: _openLocationPicker,
+                              child: Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      data.location.displayName,
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
-                                const SizedBox(width: 4),
-                                const Icon(Icons.arrow_drop_down, color: Colors.white70, size: 20),
-                              ],
+                                  const SizedBox(width: 4),
+                                  const Icon(Icons.arrow_drop_down, color: Colors.white70, size: 20),
+                                ],
+                              ),
                             ),
                           ),
                         ),
                         // Nút đổi vị trí
-                        InkWell(
-                          onTap: _openLocationPicker,
-                          borderRadius: BorderRadius.circular(16),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.18),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.tune, color: Colors.white, size: 12),
-                                SizedBox(width: 4),
-                                Text(
-                                  'Đổi vùng',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
+                        Semantics(
+                          label: 'Đổi vùng nông nghiệp',
+                          button: true,
+                          child: InkWell(
+                            onTap: _openLocationPicker,
+                            borderRadius: BorderRadius.circular(16),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.18),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.tune, color: Colors.white, size: 12),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'Đổi vùng',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),
                         const SizedBox(width: 6),
                         // Nút refresh
-                        InkWell(
-                          onTap: () => _loadWeather(forceRefresh: true),
-                          borderRadius: BorderRadius.circular(16),
-                          child: Container(
-                            padding: const EdgeInsets.all(5),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.15),
-                              shape: BoxShape.circle,
+                        Semantics(
+                          label: 'Làm mới thời tiết',
+                          button: true,
+                          child: InkWell(
+                            onTap: () => _loadWeather(forceRefresh: true),
+                            borderRadius: BorderRadius.circular(16),
+                            child: Container(
+                              padding: const EdgeInsets.all(5),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.15),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.refresh, color: Colors.white, size: 15),
                             ),
-                            child: const Icon(Icons.refresh, color: Colors.white, size: 15),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 14),
+
 
                     // ── Main Temp & Weather Status ────────────────────────
                     Row(

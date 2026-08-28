@@ -22,14 +22,14 @@ class FuzzyLogicEngine {
 
   /// Hàm mờ Hình thang (Trapezoidal Membership Function)
   static double _hamMoHinhThang(double giaTri, double diemA, double diemB, double diemC, double diemD) {
+    if (diemA == diemB && giaTri <= diemB) return 1.0;
+    if (diemC == diemD && giaTri >= diemC) return 1.0;
     if (giaTri <= diemA || giaTri >= diemD) return 0.0;
     if (giaTri >= diemB && giaTri <= diemC) return 1.0;
     if (giaTri > diemA && giaTri < diemB) {
-      if (diemB == diemA) return 1.0;
       return (giaTri - diemA) / (diemB - diemA);
     }
     if (giaTri > diemC && giaTri < diemD) {
-      if (diemD == diemC) return 1.0;
       return (diemD - giaTri) / (diemD - diemC);
     }
     return 0.0;
@@ -76,7 +76,7 @@ class FuzzyLogicEngine {
     final doLechGioiHan = doLech.clamp(0.0, 2.0);
     final muBinhThuong = _hamMoHinhThang(doLechGioiHan, 0, 0, 0.15, 0.40);
     final muCanhBao = _hamMoTamGiac(doLechGioiHan, 0.25, 0.50, 0.80);
-    final muNguyHiem = _hamMoHinhThang(doLechGioiHan, 0.60, 0.85, 2.0, 2.0);
+    final muNguyHiem = _hamMoHinhThang(doLechGioiHan, 0.60, 0.85, 1.0, 1.0);
 
     return {
       'binh_thuong': muBinhThuong,
@@ -86,6 +86,17 @@ class FuzzyLogicEngine {
   }
 
   static AiEvaluationResult evaluate(SensorData duLieuCamBien) {
+    if (!duLieuCamBien.isSensorOnline) {
+      return const AiEvaluationResult(
+        riskScore: 0.0,
+        overallStatus: StatusLevel.normal,
+        isAlertTriggered: false,
+        paramStatuses: {},
+        adviceList: ['Chưa có dữ liệu cảm biến gửi về từ nông trại.'],
+        isOfflineFallback: true,
+      );
+    }
+
     final cayTrong = PlantPresetManager.getCropById(duLieuCamBien.cropId);
     final giaiDoan = cayTrong?.getStageById(duLieuCamBien.stageId);
 
@@ -108,23 +119,34 @@ class FuzzyLogicEngine {
     final anhSangToiThieu = giaiDoan?.luxMin ?? 50000.0;
     final anhSangToiDa = giaiDoan?.luxMax ?? 80000.0;
 
-    // 2. Tính độ lệch 5 tham số
-    final doLechPh = _tinhDoLechThamSo(duLieuCamBien.ph, phToiThieu, phToiDa);
-    final doLechNhietDo = _tinhDoLechThamSo(duLieuCamBien.temperature, nhietDoToiThieu, nhietDoToiDa);
-    final doLechDoAmKhongKhi = _tinhDoLechThamSo(duLieuCamBien.humidity, doAmKhongKhiToiThieu, doAmKhongKhiToiDa);
-    final doLechDoAmDat = _tinhDoLechThamSo(duLieuCamBien.soil, doAmDatToiThieu, doAmDatToiDa);
-    final doLechAnhSang = _tinhDoLechThamSo(duLieuCamBien.light, anhSangToiThieu, anhSangToiDa);
+    // 2. Tính độ lệch cho các cảm biến đang hoạt động
+    final danhSachDoLechThamSo = <String, MapEntry<double, String>>{};
+    final danhSachLoiKhuyen = <String>[];
 
-    final danhSachDoLechThamSo = <String, MapEntry<double, String>>{
-      'ph': doLechPh,
-      'temperature': doLechNhietDo,
-      'humidity': doLechDoAmKhongKhi,
-      'soil': doLechDoAmDat,
-      'light': doLechAnhSang,
-    };
+    if (duLieuCamBien.hasPh) {
+      danhSachDoLechThamSo['ph'] = _tinhDoLechThamSo(duLieuCamBien.ph, phToiThieu, phToiDa);
+    }
+    if (duLieuCamBien.hasTemperature) {
+      danhSachDoLechThamSo['temperature'] = _tinhDoLechThamSo(duLieuCamBien.temperature, nhietDoToiThieu, nhietDoToiDa);
+    }
+    if (duLieuCamBien.hasHumidity) {
+      danhSachDoLechThamSo['humidity'] = _tinhDoLechThamSo(duLieuCamBien.humidity, doAmKhongKhiToiThieu, doAmKhongKhiToiDa);
+    }
+    if (duLieuCamBien.hasSoil) {
+      danhSachDoLechThamSo['soil'] = _tinhDoLechThamSo(duLieuCamBien.soil, doAmDatToiThieu, doAmDatToiDa);
+    }
+    if (duLieuCamBien.hasLight) {
+      danhSachDoLechThamSo['light'] = _tinhDoLechThamSo(duLieuCamBien.light, anhSangToiThieu, anhSangToiDa);
+    }
 
     final trangThaiCacThamSo = <String, String>{};
-    final danhSachLoiKhuyen = <String>[];
+    double tongTrongSoOnline = 0.0;
+    for (final k in danhSachDoLechThamSo.keys) {
+      tongTrongSoOnline += _trongSoThamSo[k] ?? 0.2;
+    }
+    if (tongTrongSoOnline <= 0.0) tongTrongSoOnline = 1.0;
+
+
 
     // 3. Khởi tạo lưới 200 điểm cho Risk Grid / Lưới Nguy cơ (0 - 100)
     const soBuocChia = 200;
@@ -140,7 +162,8 @@ class FuzzyLogicEngine {
     danhSachDoLechThamSo.forEach((tenThamSo, mucDoLech) {
       final doLech = mucDoLech.key;
       final tapMo = _moHoa(doLech);
-      final trongSo = _trongSoThamSo[tenThamSo] ?? 0.2;
+      // Chuẩn hóa trọng số theo số lượng cảm biến đang online
+      final trongSo = (_trongSoThamSo[tenThamSo] ?? 0.2) / tongTrongSoOnline;
 
       final doKichHoatThap = tapMo['binh_thuong']! * trongSo;
       final doKichHoatTrungBinh = tapMo['canh_bao']! * trongSo;
@@ -166,39 +189,55 @@ class FuzzyLogicEngine {
     });
 
     // 5. Sinh Lời khuyên Nông học (Advice Generator)
-    if (doLechPh.value == 'thap') {
-      danhSachLoiKhuyen.add('Đất bị chua (pH = ${duLieuCamBien.ph.toStringAsFixed(1)} < $phToiThieu). Khuyến nghị bón vôi nông nghiệp (CaCO3) để nâng pH.');
-    } else if (doLechPh.value == 'cao') {
-      danhSachLoiKhuyen.add('Đất bị kiềm hóa (pH = ${duLieuCamBien.ph.toStringAsFixed(1)} > $phToiDa). Bổ sung phân hữu cơ hoai mục để hạ pH.');
+    if (duLieuCamBien.hasPh && danhSachDoLechThamSo.containsKey('ph')) {
+      final doLechPh = danhSachDoLechThamSo['ph']!;
+      if (doLechPh.value == 'thap') {
+        danhSachLoiKhuyen.add('Đất bị chua (pH = ${duLieuCamBien.ph.toStringAsFixed(1)} < $phToiThieu). Khuyến nghị bón vôi nông nghiệp (CaCO3) để nâng pH.');
+      } else if (doLechPh.value == 'cao') {
+        danhSachLoiKhuyen.add('Đất bị kiềm hóa (pH = ${duLieuCamBien.ph.toStringAsFixed(1)} > $phToiDa). Bổ sung phân hữu cơ hoai mục để hạ pH.');
+      }
     }
 
-    if (doLechNhietDo.value == 'cao') {
-      danhSachLoiKhuyen.add('Nhiệt độ (${duLieuCamBien.temperature.toStringAsFixed(1)}°C) cao hơn ngưỡng tối ưu ($nhietDoToiDa°C). Bật hệ thống phun sương làm mát.');
-    } else if (doLechNhietDo.value == 'thap') {
-      danhSachLoiKhuyen.add('Nhiệt độ (${duLieuCamBien.temperature.toStringAsFixed(1)}°C) thấp hơn mức sinh trưởng ($nhietDoToiThieu°C). Cần che chắn gió cho cây.');
+    if (duLieuCamBien.hasTemperature && danhSachDoLechThamSo.containsKey('temperature')) {
+      final doLechNhietDo = danhSachDoLechThamSo['temperature']!;
+      if (doLechNhietDo.value == 'cao') {
+        danhSachLoiKhuyen.add('Nhiệt độ (${duLieuCamBien.temperature.toStringAsFixed(1)}°C) cao hơn ngưỡng tối ưu ($nhietDoToiDa°C). Bật hệ thống phun sương làm mát.');
+      } else if (doLechNhietDo.value == 'thap') {
+        danhSachLoiKhuyen.add('Nhiệt độ (${duLieuCamBien.temperature.toStringAsFixed(1)}°C) thấp hơn mức sinh trưởng ($nhietDoToiThieu°C). Cần che chắn gió cho cây.');
+      }
     }
 
-    if (doLechDoAmDat.value == 'thap') {
-      danhSachLoiKhuyen.add('Độ ẩm đất (${duLieuCamBien.soil.toStringAsFixed(1)}%) quá khô so với nhu cầu giai đoạn này ($doAmDatToiThieu%). Kích hoạt tưới nước tự động.');
-    } else if (doLechDoAmDat.value == 'cao' && duLieuCamBien.soil > 90.0) {
-      danhSachLoiKhuyen.add('Đất đang bị úng nước (${duLieuCamBien.soil.toStringAsFixed(1)}% > $doAmDatToiDa%). Tạm ngưng tưới và mở rãnh thoát nước ngay.');
+    if (duLieuCamBien.hasSoil && danhSachDoLechThamSo.containsKey('soil')) {
+      final doLechDoAmDat = danhSachDoLechThamSo['soil']!;
+      if (doLechDoAmDat.value == 'thap') {
+        danhSachLoiKhuyen.add('Độ ẩm đất (${duLieuCamBien.soil.toStringAsFixed(1)}%) quá khô so với nhu cầu giai đoạn này ($doAmDatToiThieu%). Kích hoạt tưới nước tự động.');
+      } else if (doLechDoAmDat.value == 'cao' && duLieuCamBien.soil > 90.0) {
+        danhSachLoiKhuyen.add('Đất đang bị úng nước (${duLieuCamBien.soil.toStringAsFixed(1)}% > $doAmDatToiDa%). Tạm ngưng tưới và mở rãnh thoát nước ngay.');
+      }
     }
 
-    if (doLechDoAmKhongKhi.value == 'thap') {
-      danhSachLoiKhuyen.add('Độ ẩm không khí (${duLieuCamBien.humidity.toStringAsFixed(1)}%) quá khô. Tăng cường phun sương tạo ẩm môi trường.');
-    } else if (doLechDoAmKhongKhi.value == 'cao' && duLieuCamBien.humidity > 90.0) {
-      danhSachLoiKhuyen.add('Ẩm độ không khí quá cao (${duLieuCamBien.humidity.toStringAsFixed(1)}%). Chú ý thông thoáng vườn tránh nấm bệnh phát triển.');
+    if (duLieuCamBien.hasHumidity && danhSachDoLechThamSo.containsKey('humidity')) {
+      final doLechDoAmKhongKhi = danhSachDoLechThamSo['humidity']!;
+      if (doLechDoAmKhongKhi.value == 'thap') {
+        danhSachLoiKhuyen.add('Độ ẩm không khí (${duLieuCamBien.humidity.toStringAsFixed(1)}%) quá khô. Tăng cường phun sương tạo ẩm môi trường.');
+      } else if (doLechDoAmKhongKhi.value == 'cao' && duLieuCamBien.humidity > 90.0) {
+        danhSachLoiKhuyen.add('Ẩm độ không khí quá cao (${duLieuCamBien.humidity.toStringAsFixed(1)}%). Chú ý thông thoáng vườn tránh nấm bệnh phát triển.');
+      }
     }
 
-    if (doLechAnhSang.value == 'thap') {
-      danhSachLoiKhuyen.add('Cường độ ánh sáng (${duLieuCamBien.light.toStringAsFixed(0)} lux) chưa đủ ($anhSangToiThieu lux). Tỉa bớt cành rậm hoặc tháo bạt che.');
-    } else if (doLechAnhSang.value == 'cao') {
-      danhSachLoiKhuyen.add('Nắng quá gắt (${duLieuCamBien.light.toStringAsFixed(0)} lux > $anhSangToiDa lux). Kéo lưới che nắng bảo vệ bộ lá.');
+    if (duLieuCamBien.hasLight && danhSachDoLechThamSo.containsKey('light')) {
+      final doLechAnhSang = danhSachDoLechThamSo['light']!;
+      if (doLechAnhSang.value == 'thap') {
+        danhSachLoiKhuyen.add('Cường độ ánh sáng (${duLieuCamBien.light.toStringAsFixed(0)} lux) chưa đủ ($anhSangToiThieu lux). Tỉa bớt cành rậm hoặc tháo bạt che.');
+      } else if (doLechAnhSang.value == 'cao') {
+        danhSachLoiKhuyen.add('Nắng quá gắt (${duLieuCamBien.light.toStringAsFixed(0)} lux > $anhSangToiDa lux). Kéo lưới che nắng bảo vệ bộ lá.');
+      }
     }
 
     if (danhSachLoiKhuyen.isEmpty) {
-      danhSachLoiKhuyen.add('Tất cả 5 chỉ số cảm biến đang ở trạng thái tối ưu cho giai đoạn \'$tenGiaiDoan\'.');
+      danhSachLoiKhuyen.add('Tất cả chỉ số cảm biến đang ở trạng thái tối ưu cho giai đoạn \'$tenGiaiDoan\'.');
     }
+
 
     // 6. DEFUZZIFICATION / GIẢI MỜ (Centroid - Trọng tâm)
     double tuSo = 0.0;
@@ -234,13 +273,23 @@ class FuzzyLogicEngine {
       return StatusLevel.normal;
     }
 
-    final anhXaTrangThaiThamSo = <String, StatusLevel>{
-      'temperature': giaiMaTrangThai(trangThaiCacThamSo['temperature']),
-      'humidity': giaiMaTrangThai(trangThaiCacThamSo['humidity']),
-      'soil': giaiMaTrangThai(trangThaiCacThamSo['soil']),
-      'light': giaiMaTrangThai(trangThaiCacThamSo['light']),
-      'ph': giaiMaTrangThai(trangThaiCacThamSo['ph']),
-    };
+    final anhXaTrangThaiThamSo = <String, StatusLevel>{};
+    if (duLieuCamBien.hasTemperature) {
+      anhXaTrangThaiThamSo['temperature'] = giaiMaTrangThai(trangThaiCacThamSo['temperature']);
+    }
+    if (duLieuCamBien.hasHumidity) {
+      anhXaTrangThaiThamSo['humidity'] = giaiMaTrangThai(trangThaiCacThamSo['humidity']);
+    }
+    if (duLieuCamBien.hasSoil) {
+      anhXaTrangThaiThamSo['soil'] = giaiMaTrangThai(trangThaiCacThamSo['soil']);
+    }
+    if (duLieuCamBien.hasLight) {
+      anhXaTrangThaiThamSo['light'] = giaiMaTrangThai(trangThaiCacThamSo['light']);
+    }
+    if (duLieuCamBien.hasPh) {
+      anhXaTrangThaiThamSo['ph'] = giaiMaTrangThai(trangThaiCacThamSo['ph']);
+    }
+
 
     return AiEvaluationResult(
       riskScore: diemNguyCo,
@@ -254,4 +303,3 @@ class FuzzyLogicEngine {
     );
   }
 }
-

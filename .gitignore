@@ -47,3 +47,9 @@ app.*.map.json
 # AI API Service (kept locally, excluded from git/GitHub)
 lib/services/ai_api_service.dart
 
+# Documentation files (kept locally)
+*.docx
+~$*
+~*.tmp
+
+

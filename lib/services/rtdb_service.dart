@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../models/farm_model.dart';
 import '../models/fuzzy_logic_engine.dart';
@@ -19,29 +20,43 @@ class RTDBService {
     final ref = _db.ref('sensors/$uid/$farmId');
     ref.keepSynced(true);
     return ref.onValue.map((event) {
-      final snapshot = event.snapshot;
-      if (!snapshot.exists || snapshot.value == null) {
+      try {
+        final snapshot = event.snapshot;
+        if (!snapshot.exists || snapshot.value == null) {
+          return <SensorData>[];
+        }
+
+        if (snapshot.value is! Map) {
+          debugPrint('Cảnh báo: Dữ liệu sensors/$uid/$farmId không phải Map.');
+          return <SensorData>[];
+        }
+
+        final dataMap = Map<String, dynamic>.from(snapshot.value as Map);
+        final List<SensorData> sensors = [];
+
+        dataMap.forEach((key, value) {
+          try {
+            if (value is Map) {
+              final sensorData = Map<String, dynamic>.from(value);
+              final raw = SensorData.fromMap(sensorData, id: key.toString());
+              final aiResult = FuzzyLogicEngine.evaluate(raw);
+              final enriched = raw.copyWith(aiEvaluation: aiResult);
+
+              if (enriched.overallStatus != StatusLevel.normal) {
+                NotificationService().processSensorAlerts(farmName, enriched);
+              }
+              sensors.add(enriched);
+            }
+          } catch (itemErr) {
+            debugPrint('Lỗi parse cảm biến [$key]: $itemErr');
+          }
+        });
+
+        return sensors;
+      } catch (e, stack) {
+        debugPrint('Lỗi khi đọc stream watchSensors ($farmId): $e\n$stack');
         return <SensorData>[];
       }
-
-      final dataMap = Map<String, dynamic>.from(snapshot.value as Map);
-      final List<SensorData> sensors = [];
-
-      dataMap.forEach((key, value) {
-        if (value is Map) {
-          final sensorData = Map<String, dynamic>.from(value);
-          final raw = SensorData.fromMap(sensorData, id: key.toString());
-          final aiResult = FuzzyLogicEngine.evaluate(raw);
-          final enriched = raw.copyWith(aiEvaluation: aiResult);
-
-          if (enriched.overallStatus != StatusLevel.normal) {
-            NotificationService().processSensorAlerts(farmName, enriched);
-          }
-          sensors.add(enriched);
-        }
-      });
-
-      return sensors;
     });
   }
 
@@ -50,30 +65,47 @@ class RTDBService {
     final ref = _db.ref('sensors/$uid');
     ref.keepSynced(true);
     return ref.onValue.map((event) {
-      final snapshot = event.snapshot;
-      if (!snapshot.exists || snapshot.value == null) {
+      try {
+        final snapshot = event.snapshot;
+        if (!snapshot.exists || snapshot.value == null) {
+          return <SensorData>[];
+        }
+
+        if (snapshot.value is! Map) {
+          return <SensorData>[];
+        }
+
+        final dataMap = Map<String, dynamic>.from(snapshot.value as Map);
+        final List<SensorData> allSensors = [];
+
+        dataMap.forEach((farmId, farmValue) {
+          try {
+            if (farmValue is Map) {
+              final sensorsMap = Map<String, dynamic>.from(farmValue);
+              sensorsMap.forEach((sensorId, sensorValue) {
+                try {
+                  if (sensorValue is Map) {
+                    final sensorData = Map<String, dynamic>.from(sensorValue);
+                    sensorData['__farmId'] = farmId.toString();
+                    final raw = SensorData.fromMap(sensorData, id: sensorId.toString());
+                    final aiResult = FuzzyLogicEngine.evaluate(raw);
+                    allSensors.add(raw.copyWith(aiEvaluation: aiResult));
+                  }
+                } catch (sErr) {
+                  debugPrint('Lỗi parse sensorId [$sensorId] farm [$farmId]: $sErr');
+                }
+              });
+            }
+          } catch (fErr) {
+            debugPrint('Lỗi parse farmId [$farmId]: $fErr');
+          }
+        });
+
+        return allSensors;
+      } catch (e, stack) {
+        debugPrint('Lỗi khi đọc stream watchAllSensors: $e\n$stack');
         return <SensorData>[];
       }
-
-      final dataMap = Map<String, dynamic>.from(snapshot.value as Map);
-      final List<SensorData> allSensors = [];
-
-      dataMap.forEach((farmId, farmValue) {
-        if (farmValue is Map) {
-          final sensorsMap = Map<String, dynamic>.from(farmValue);
-          sensorsMap.forEach((sensorId, sensorValue) {
-            if (sensorValue is Map) {
-              final sensorData = Map<String, dynamic>.from(sensorValue);
-              sensorData['__farmId'] = farmId.toString();
-              final raw = SensorData.fromMap(sensorData, id: sensorId.toString());
-              final aiResult = FuzzyLogicEngine.evaluate(raw);
-              allSensors.add(raw.copyWith(aiEvaluation: aiResult));
-            }
-          });
-        }
-      });
-
-      return allSensors;
     });
   }
 
@@ -86,16 +118,25 @@ class RTDBService {
     final ref = _db.ref('sensors/$uid/$farmId/$sensorId');
     ref.keepSynced(true);
     return ref.onValue.map((event) {
-      final snapshot = event.snapshot;
-      if (!snapshot.exists || snapshot.value == null) {
+      try {
+        final snapshot = event.snapshot;
+        if (!snapshot.exists || snapshot.value == null) {
+          return null;
+        }
+        if (snapshot.value is! Map) {
+          return null;
+        }
+        final dataMap = Map<String, dynamic>.from(snapshot.value as Map);
+        final rawSensor = SensorData.fromMap(dataMap, id: sensorId);
+        final aiResult = FuzzyLogicEngine.evaluate(rawSensor);
+        return rawSensor.copyWith(aiEvaluation: aiResult);
+      } catch (e) {
+        debugPrint('Lỗi watchSingleSensor [$sensorId]: $e');
         return null;
       }
-      final dataMap = Map<String, dynamic>.from(snapshot.value as Map);
-      final rawSensor = SensorData.fromMap(dataMap, id: sensorId);
-      final aiResult = FuzzyLogicEngine.evaluate(rawSensor);
-      return rawSensor.copyWith(aiEvaluation: aiResult);
     });
   }
+
 
   /// Thêm hoặc Cập nhật Cảm biến lên Realtime Database
   Future<void> addOrUpdateSensor(
