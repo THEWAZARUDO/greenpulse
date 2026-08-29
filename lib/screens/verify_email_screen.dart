@@ -3,6 +3,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'main_tab_screen.dart';
+import 'verify_email_screen/verify_email_header.dart';
+import 'verify_email_screen/verify_email_actions.dart';
+
+export 'verify_email_screen/verify_email_header.dart';
+export 'verify_email_screen/verify_email_actions.dart';
 
 /// Màn hình chờ xác thực Email
 class VerifyEmailScreen extends StatefulWidget {
@@ -204,173 +209,15 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Icon & Badge
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE8F5E9),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: const Color(0xFFA5D6A7),
-                            width: 2,
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.mark_email_unread_outlined,
-                          size: 56,
-                          color: Color(0xFF2E7D32),
-                        ),
-                      ),
+                      VerifyEmailHeader(email: email),
                       const SizedBox(height: 24),
-
-                      // Title
-                      const Text(
-                        'Xác Thực Email Của Bạn',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1B5E20),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Description
-                      RichText(
-                        textAlign: TextAlign.center,
-                        text: TextSpan(
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.black87,
-                            height: 1.5,
-                          ),
-                          children: [
-                            const TextSpan(
-                              text:
-                                  'Chúng tôi đã gửi một liên kết xác thực đến địa chỉ:\n',
-                            ),
-                            TextSpan(
-                              text: email,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF2E7D32),
-                              ),
-                            ),
-                            const TextSpan(
-                              text:
-                                  '\n\nVui lòng kiểm tra hộp thư (bao gồm cả thư rác/Spam) và nhấn vào liên kết để kích hoạt tài khoản.',
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-
-                      // Progress indicator / Pulse info
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF1F8E9),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: const Color(0xFFC8E6C9)),
-                        ),
-                        child: Row(
-                          children: const [
-                            SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Color(0xFF2E7D32),
-                              ),
-                            ),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'Tự động kiểm tra sau mỗi 3 giây...',
-                                style: TextStyle(
-                                  fontSize: 12.5,
-                                  color: Color(0xFF2E7D32),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Button 1: Kiểm tra ngay
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: ElevatedButton.icon(
-                          onPressed: _loadingCheck ? null : _manualCheck,
-                          icon: _loadingCheck
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Icon(Icons.refresh, size: 20),
-                          label: const Text(
-                            'Tôi đã bấm link xác thực / Kiểm tra ngay',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF2E7D32),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Button 2: Gửi lại email
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: OutlinedButton.icon(
-                          onPressed: _canResendEmail
-                              ? _resendVerificationEmail
-                              : null,
-                          icon: const Icon(Icons.send_outlined, size: 18),
-                          label: Text(
-                            _canResendEmail
-                                ? 'Gửi lại email xác minh'
-                                : 'Gửi lại sau (${_resendCountdown}s)',
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF2E7D32),
-                            side: const BorderSide(color: Color(0xFF81C784)),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Button 3: Đăng xuất
-                      TextButton.icon(
-                        onPressed: () => _authService.signOut(),
-                        icon: const Icon(
-                          Icons.logout,
-                          size: 18,
-                          color: Colors.grey,
-                        ),
-                        label: const Text(
-                          'Đăng xuất / Dùng tài khoản khác',
-                          style: TextStyle(color: Colors.grey, fontSize: 13),
-                        ),
+                      VerifyEmailActions(
+                        loadingCheck: _loadingCheck,
+                        canResendEmail: _canResendEmail,
+                        resendCountdown: _resendCountdown,
+                        onManualCheck: _manualCheck,
+                        onResendEmail: _resendVerificationEmail,
+                        onSignOut: () => _authService.signOut(),
                       ),
                     ],
                   ),
