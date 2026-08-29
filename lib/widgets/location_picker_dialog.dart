@@ -2,6 +2,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/weather_model.dart';
 import '../services/weather_service.dart';
+import 'location_picker_dialog/location_tile.dart';
+import 'location_picker_dialog/recent_and_presets_view.dart';
+import 'location_picker_dialog/search_results_view.dart';
+
+export 'location_picker_dialog/location_tile.dart';
+export 'location_picker_dialog/recent_and_presets_view.dart';
+export 'location_picker_dialog/search_results_view.dart';
 
 class LocationPickerDialog extends StatefulWidget {
   final WeatherLocation? currentLocation;
@@ -172,196 +179,23 @@ class _LocationPickerDialogState extends State<LocationPickerDialog> {
           // Content body
           Flexible(
             child: isSearching
-                ? _buildSearchResults()
-                : _buildRecentAndPresets(recentList, presets),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSearchResults() {
-    if (_isLoading) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(strokeWidth: 2.5, color: Color(0xFF2E7D32)),
-              SizedBox(height: 12),
-              Text('Đang tìm kiếm địa điểm...', style: TextStyle(fontSize: 12.5, color: Colors.grey)),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (_searchResults.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.location_off_outlined, size: 40, color: Colors.grey.shade400),
-              const SizedBox(height: 10),
-              Text(
-                'Không tìm thấy địa điểm phù hợp.\nHãy thử tìm tên không dấu (VD: Ea Kar, Dak Lak)...',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Kết quả tìm kiếm (${_searchResults.length}):',
-          style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Colors.grey.shade700),
-        ),
-        const SizedBox(height: 8),
-        Expanded(
-          child: ListView.separated(
-            itemCount: _searchResults.length,
-            separatorBuilder: (context, index) => const Divider(height: 1, color: Color(0xFFEEEEEE)),
-            itemBuilder: (context, index) {
-              final loc = _searchResults[index];
-              return _buildLocationTile(loc);
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRecentAndPresets(List<WeatherLocation> recentList, List<WeatherLocation> presets) {
-    return ListView(
-      children: [
-        // ── 1. Phần Lịch sử đã chọn gần đây (Lưu trữ tối đa 10) ───────────
-        if (recentList.isNotEmpty) ...[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.history, size: 16, color: Color(0xFF2E7D32)),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Đã chọn gần đây (${recentList.length}/10):',
-                    style: const TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1B5E20),
-                    ),
+                ? SearchResultsView(
+                    isLoading: _isLoading,
+                    searchResults: _searchResults,
+                    currentLocation: widget.currentLocation,
+                    onSelect: _selectLocation,
+                  )
+                : RecentAndPresetsView(
+                    recentList: recentList,
+                    presets: presets,
+                    currentLocation: widget.currentLocation,
+                    onSelect: _selectLocation,
+                    onRemoveRecent: (loc) => _weatherService.removeRecentLocation(loc),
+                    onClearRecents: () => _weatherService.clearRecentLocations(),
                   ),
-                ],
-              ),
-              TextButton(
-                onPressed: () => _weatherService.clearRecentLocations(),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: const Text(
-                  'Xóa lịch sử',
-                  style: TextStyle(fontSize: 11.5, color: Colors.redAccent),
-                ),
-              ),
-            ],
           ),
-          const SizedBox(height: 6),
-          ...recentList.map((loc) => _buildLocationTile(loc, isRecent: true)),
-          const SizedBox(height: 16),
-          const Divider(height: 1, color: Color(0xFFE0E0E0)),
-          const SizedBox(height: 12),
-        ],
-
-        // ── 2. Khu vực nông nghiệp trọng điểm (Presets) ───────────────────
-        Row(
-          children: [
-            const Icon(Icons.eco_outlined, size: 16, color: Color(0xFF2E7D32)),
-            const SizedBox(width: 6),
-            Text(
-              'Khu vực nông nghiệp trọng điểm (${presets.length}):',
-              style: TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        ...presets.map((loc) => _buildLocationTile(loc)),
-      ],
-    );
-  }
-
-  Widget _buildLocationTile(WeatherLocation loc, {bool isRecent = false}) {
-    final isSelected = widget.currentLocation != null &&
-        (widget.currentLocation!.name.toLowerCase() == loc.name.toLowerCase() ||
-            ((widget.currentLocation!.latitude - loc.latitude).abs() < 0.05 &&
-                (widget.currentLocation!.longitude - loc.longitude).abs() < 0.05));
-
-    return ListTile(
-      dense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-      leading: Container(
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFF2E7D32)
-              : (isRecent ? const Color(0xFFFFF3E0) : const Color(0xFFE8F5E9)),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          isRecent ? Icons.history : Icons.place,
-          size: 16,
-          color: isSelected
-              ? Colors.white
-              : (isRecent ? const Color(0xFFE65100) : const Color(0xFF2E7D32)),
-        ),
-      ),
-      title: Text(
-        loc.name,
-        style: TextStyle(
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-          fontSize: 13.5,
-          color: isSelected ? const Color(0xFF1B5E20) : Colors.black87,
-        ),
-      ),
-      subtitle: Text(
-        loc.admin1 != null && loc.admin1!.isNotEmpty
-            ? '${loc.admin1}, ${loc.country ?? 'Việt Nam'}'
-            : (loc.country ?? 'Việt Nam'),
-        style: TextStyle(fontSize: 11.5, color: Colors.grey.shade500),
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (isSelected)
-            const Padding(
-              padding: EdgeInsets.only(right: 6),
-              child: Icon(Icons.check_circle, color: Color(0xFF2E7D32), size: 18),
-            ),
-          if (isRecent)
-            IconButton(
-              icon: const Icon(Icons.close, size: 16, color: Colors.grey),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              splashRadius: 16,
-              onPressed: () => _weatherService.removeRecentLocation(loc),
-            ),
         ],
       ),
-      onTap: () => _selectLocation(loc),
     );
   }
 }
-
