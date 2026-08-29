@@ -3,15 +3,13 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/weather_model.dart';
+import 'weather_service/weather_cache.dart';
+import 'weather_service/weather_location_presets.dart';
+import 'weather_service/weather_string_utils.dart';
 
-class _WeatherCacheEntry {
-  final WeatherData data;
-  final DateTime timestamp;
-
-  _WeatherCacheEntry({required this.data, required this.timestamp});
-
-  bool get isValid => DateTime.now().difference(timestamp).inMinutes < 15;
-}
+export 'weather_service/weather_cache.dart';
+export 'weather_service/weather_location_presets.dart';
+export 'weather_service/weather_string_utils.dart';
 
 class WeatherService {
   WeatherService._internal();
@@ -24,188 +22,13 @@ class WeatherService {
   static const int maxRecentLocations = 10;
 
   // Cache theo key: "lat_lng"
-  final Map<String, _WeatherCacheEntry> _cache = {};
+  final Map<String, WeatherCacheEntry> _cache = {};
 
   /// Địa điểm mặc định (Ea Kar - Đắk Lắk)
-  static const WeatherLocation defaultLocation = WeatherLocation(
-    name: 'Ea Kar',
-    admin1: 'Đắk Lắk',
-    country: 'Việt Nam',
-    latitude: 12.8082,
-    longitude: 108.4490,
-  );
+  static const WeatherLocation defaultLocation = WeatherLocationPresets.defaultLocation;
 
   /// Danh sách các vùng nông nghiệp trọng điểm & đô thị lớn tại Việt Nam
-  static const List<WeatherLocation> presetLocations = [
-    WeatherLocation(
-      name: 'Ea Kar',
-      admin1: 'Đắk Lắk',
-      country: 'Việt Nam',
-      latitude: 12.8082,
-      longitude: 108.4490,
-    ),
-    WeatherLocation(
-      name: 'Buôn Ma Thuột',
-      admin1: 'Đắk Lắk',
-      country: 'Việt Nam',
-      latitude: 12.6667,
-      longitude: 108.0500,
-    ),
-    WeatherLocation(
-      name: 'Đà Lạt',
-      admin1: 'Lâm Đồng',
-      country: 'Việt Nam',
-      latitude: 11.9404,
-      longitude: 108.4583,
-    ),
-    WeatherLocation(
-      name: 'Bảo Lộc',
-      admin1: 'Lâm Đồng',
-      country: 'Việt Nam',
-      latitude: 11.5478,
-      longitude: 107.8083,
-    ),
-    WeatherLocation(
-      name: 'Pleiku',
-      admin1: 'Gia Lai',
-      country: 'Việt Nam',
-      latitude: 13.9833,
-      longitude: 108.0000,
-    ),
-    WeatherLocation(
-      name: 'Gia Nghĩa',
-      admin1: 'Đắk Nông',
-      country: 'Việt Nam',
-      latitude: 12.0031,
-      longitude: 107.6894,
-    ),
-    WeatherLocation(
-      name: 'Kon Tum',
-      admin1: 'Kon Tum',
-      country: 'Việt Nam',
-      latitude: 14.3500,
-      longitude: 108.0000,
-    ),
-    WeatherLocation(
-      name: 'Đồng Xoài',
-      admin1: 'Bình Phước',
-      country: 'Việt Nam',
-      latitude: 11.5333,
-      longitude: 106.8833,
-    ),
-    WeatherLocation(
-      name: 'Long Khánh',
-      admin1: 'Đồng Nai',
-      country: 'Việt Nam',
-      latitude: 10.9333,
-      longitude: 107.2333,
-    ),
-    WeatherLocation(
-      name: 'Mộc Châu',
-      admin1: 'Sơn La',
-      country: 'Việt Nam',
-      latitude: 20.8400,
-      longitude: 104.6400,
-    ),
-    WeatherLocation(
-      name: 'TP. Hồ Chí Minh',
-      admin1: 'Hồ Chí Minh',
-      country: 'Việt Nam',
-      latitude: 10.8231,
-      longitude: 106.6297,
-    ),
-    WeatherLocation(
-      name: 'Hà Nội',
-      admin1: 'Hà Nội',
-      country: 'Việt Nam',
-      latitude: 21.0285,
-      longitude: 105.8542,
-    ),
-    WeatherLocation(
-      name: 'Cần Thơ',
-      admin1: 'Cần Thơ',
-      country: 'Việt Nam',
-      latitude: 10.0452,
-      longitude: 105.7469,
-    ),
-    WeatherLocation(
-      name: 'Mỹ Tho',
-      admin1: 'Tiền Giang',
-      country: 'Việt Nam',
-      latitude: 10.3544,
-      longitude: 106.3653,
-    ),
-  ];
-
-  // Từ điển alias / từ khóa viết tắt & viết liền phổ biến tại Việt Nam / Tây Nguyên
-  static const Map<String, String> _locationAliases = {
-    'eakar': 'Ea Kar',
-    'ea kar': 'Ea Kar',
-    'eahleo': "Ea H'leo",
-    'ea hleo': "Ea H'leo",
-    'eah\'leo': "Ea H'leo",
-    'easup': 'Ea Súp',
-    'ea sup': 'Ea Súp',
-    'eaknop': 'Ea Knốp',
-    'ea knop': 'Ea Knốp',
-    'krongpak': 'Krông Pắc',
-    'krong pac': 'Krông Pắc',
-    'krongana': 'Krông Ana',
-    'krong ana': 'Krông Ana',
-    'krongnang': 'Krông Năng',
-    'krong nang': 'Krông Năng',
-    'krongbuk': 'Krông Búk',
-    'krong buk': 'Krông Búk',
-    'krongbong': 'Krông Bông',
-    'krong bong': 'Krông Bông',
-    'krongno': 'Krông Nô',
-    'krong no': 'Krông Nô',
-    'buonmathuot': 'Buôn Ma Thuột',
-    'bmt': 'Buôn Ma Thuột',
-    'buon ma thuot': 'Buôn Ma Thuột',
-    'buondon': 'Buôn Đôn',
-    'buon don': 'Buôn Đôn',
-    'cukuin': 'Cư Kuin',
-    'cu kuin': 'Cư Kuin',
-    'cumgar': "Cư M'gar",
-    'cu mgar': "Cư M'gar",
-    'mdrak': "M'Đrắk",
-    'm drak': "M'Đrắk",
-    'm\'drak': "M'Đrắk",
-    'dalat': 'Đà Lạt',
-    'da lat': 'Đà Lạt',
-    'baoloc': 'Bảo Lộc',
-    'bao loc': 'Bảo Lộc',
-    'tphcm': 'Hồ Chí Minh',
-    'hcm': 'Hồ Chí Minh',
-    'saigon': 'Hồ Chí Minh',
-    'sai gon': 'Hồ Chí Minh',
-    'danang': 'Đà Nẵng',
-    'da nang': 'Đà Nẵng',
-    'daklak': 'Đắk Lắk',
-    'darlac': 'Đắk Lắk',
-    'dac lac': 'Đắk Lắk',
-    'daknong': 'Đắk Nông',
-    'dac nong': 'Đắk Nông',
-    'kontum': 'Kon Tum',
-    'kon tum': 'Kon Tum',
-    'gialai': 'Gia Lai',
-    'gia lai': 'Gia Lai',
-    'lamdong': 'Lâm Đồng',
-    'lam dong': 'Lâm Đồng',
-    'dongxoai': 'Đồng Xoài',
-    'dong xoai': 'Đồng Xoài',
-    'longkhanh': 'Long Khánh',
-    'long khanh': 'Long Khánh',
-    'mocchau': 'Mộc Châu',
-    'moc chau': 'Mộc Châu',
-    'cantho': 'Cần Thơ',
-    'can tho': 'Cần Thơ',
-    'mytho': 'Mỹ Tho',
-    'my tho': 'Mỹ Tho',
-    'hanoi': 'Hà Nội',
-    'ha noi': 'Hà Nội',
-  };
+  static const List<WeatherLocation> presetLocations = WeatherLocationPresets.presetLocations;
 
   // ValueNotifier lưu địa điểm hiện đang được chọn
   final ValueNotifier<WeatherLocation> currentLocationNotifier =
@@ -329,29 +152,7 @@ class WeatherService {
 
   /// Hàm loại bỏ dấu tiếng Việt để so sánh tìm kiếm thông minh
   static String removeDiacritics(String str, {bool toLowerCase = false}) {
-    const vietnameseMap = {
-      'a': 'áàảãạăắằẳẵặâấầẩẫậ',
-      'A': 'ÁÀẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬ',
-      'd': 'đ',
-      'D': 'Đ',
-      'e': 'éèẻẽẹêếềểễệ',
-      'E': 'ÉÈẺẼẸÊẾỀỂỄỆ',
-      'i': 'íìỉĩị',
-      'I': 'ÍÌỈĨỊ',
-      'o': 'óòỏõọôốồổỗộơớờởỡợ',
-      'O': 'ÓÒỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢ',
-      'u': 'úùủũụưứừửữự',
-      'U': 'ÚÙỦŨỤƯỨỪỬỮỰ',
-      'y': 'ýỳỷỹỵ',
-      'Y': 'ÝỲỶỸỴ',
-    };
-    String result = str;
-    vietnameseMap.forEach((nonDiacritic, diacritics) {
-      for (int i = 0; i < diacritics.length; i++) {
-        result = result.replaceAll(diacritics[i], nonDiacritic);
-      }
-    });
-    return toLowerCase ? result.toLowerCase() : result;
+    return WeatherStringUtils.removeDiacritics(str, toLowerCase: toLowerCase);
   }
 
   /// Lấy dự báo thời tiết từ Open-Meteo API
@@ -389,7 +190,7 @@ class WeatherService {
           json: data,
         );
 
-        _cache[cacheKey] = _WeatherCacheEntry(
+        _cache[cacheKey] = WeatherCacheEntry(
           data: weatherData,
           timestamp: DateTime.now(),
         );
@@ -429,9 +230,9 @@ class WeatherService {
     final primaryUnaccented = removeDiacritics(primaryClean).replaceAll(' ', '');
 
     // 2. Tra cứu Alias / Từ điển tên chuẩn hóa
-    final aliasMatch = _locationAliases[primaryClean] ??
-        _locationAliases[primaryUnaccented] ??
-        _locationAliases[removeDiacritics(primaryClean)];
+    final aliasMatch = WeatherLocationPresets.locationAliases[primaryClean] ??
+        WeatherLocationPresets.locationAliases[primaryUnaccented] ??
+        WeatherLocationPresets.locationAliases[removeDiacritics(primaryClean)];
 
     final searchNames = <String>{};
     if (aliasMatch != null) {
@@ -441,7 +242,8 @@ class WeatherService {
     if (secondaryToken != null) {
       final secClean = secondaryToken.toLowerCase();
       final secUnaccented = removeDiacritics(secClean).replaceAll(' ', '');
-      final secAlias = _locationAliases[secClean] ?? _locationAliases[secUnaccented];
+      final secAlias = WeatherLocationPresets.locationAliases[secClean] ??
+          WeatherLocationPresets.locationAliases[secUnaccented];
       if (secAlias != null) {
         searchNames.add(secAlias);
       } else {
@@ -549,4 +351,3 @@ class WeatherService {
     return combined;
   }
 }
-
