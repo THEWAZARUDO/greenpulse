@@ -73,7 +73,7 @@ class FuzzyLogicEngine {
 
   /// FUZZIFICATION (MỜ HÓA): Suy ra độ thuộc (membership degree) vào 3 tập mờ Bình thường / Cảnh báo / Nguy hiểm
   static Map<String, double> _moHoa(double doLech) {
-    final doLechGioiHan = doLech.clamp(0.0, 2.0);
+    final doLechGioiHan = doLech.clamp(0.0, 1.0);
     final muBinhThuong = _hamMoHinhThang(doLechGioiHan, 0, 0, 0.15, 0.40);
     final muCanhBao = _hamMoTamGiac(doLechGioiHan, 0.25, 0.50, 0.80);
     final muNguyHiem = _hamMoHinhThang(doLechGioiHan, 0.60, 0.85, 1.0, 1.0);
