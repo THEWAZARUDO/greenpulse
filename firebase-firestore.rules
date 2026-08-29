@@ -1,0 +1,22 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Firestore trong app chỉ được app (đã đăng nhập) đọc/ghi trực tiếp -
+    // ESP32 không chạm vào Firestore (chỉ ghi RTDB) nên không cần đánh đổi
+    // như bên RTDB, có thể khóa chặt tuyệt đối theo chủ tài khoản.
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      match /farms/{farmId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
+    // Mặc định từ chối mọi collection khác chưa được khai báo rõ ở trên.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

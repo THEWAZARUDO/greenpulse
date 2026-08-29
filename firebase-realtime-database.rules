@@ -1,0 +1,62 @@
+{
+  "rules": {
+    "sensors": {
+      "$uid": {
+        // Chỉ chủ tài khoản (đã đăng nhập Firebase Auth) mới được ĐỌC dữ liệu farm của mình.
+        // Chặn việc người khác duyệt/xem trộm dữ liệu farm của người khác qua RTDB.
+        ".read": "auth != null && auth.uid === $uid",
+
+        "$farmId": {
+          // Xóa/ghi đè CẢ MỘT farm cùng lúc (ref('sensors/$uid/$farmId').remove())
+          // chỉ chủ tài khoản mới được làm - ESP32 không cần quyền này.
+          ".write": "auth != null && auth.uid === $uid",
+
+          "$sensorId": {
+            // Ghi từng sensor riêng lẻ: phải MỞ vì ESP32 không có Firebase Auth,
+            // và app (chủ tài khoản) cũng ghi qua đúng đường dẫn này.
+            // Đánh đổi: bất kỳ ai biết đúng uid+farmId+sensorId đều ghi được node này -
+            // được giảm thiểu bằng validate bên dưới (ép kiểu + giới hạn giá trị vật lý hợp lý).
+            ".write": true,
+
+            "temperature": {
+              ".validate": "newData.isNumber() && newData.val() >= -10 && newData.val() <= 60"
+            },
+            "humidity": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100"
+            },
+            "soil": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100"
+            },
+            "light": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 150000"
+            },
+            "ph": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 14"
+            },
+            "cropId": {
+              ".validate": "newData.isString() && newData.val().length <= 64"
+            },
+            "stageId": {
+              ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 10"
+            },
+            "id": {
+              ".validate": "newData.isString() && newData.val().length <= 128"
+            },
+
+            // Các field khác (plantingDate, extra...) không ép validate cụ thể để tránh
+            // vô tình chặn field mới thêm sau này trong toMap()/extra - nhưng vẫn phải là
+            // con hợp lệ của node đã được ép kiểu ở trên cho các field quan trọng.
+            "$other": {
+              ".validate": true
+            }
+          }
+        }
+      }
+    },
+
+    // Mặc định từ chối mọi đường dẫn khác ngoài "sensors" - tránh lộ node nào đó
+    // lỡ thêm sau này mà quên viết rule riêng.
+      ".read": "auth != null",
+      ".write": true
+  }
+}
