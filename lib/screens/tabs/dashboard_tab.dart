@@ -5,9 +5,6 @@ import '../../services/firestore_service.dart';
 import '../../services/rtdb_service.dart';
 import '../../widgets/weather_card.dart';
 import 'dashboard_tab/dashboard_header.dart';
-import 'dashboard_tab/status_badge.dart';
-import 'dashboard_tab/metric_tile.dart';
-import 'dashboard_tab/sensor_metrics_view.dart';
 import 'dashboard_tab/farm_dashboard_card.dart';
 import 'dashboard_tab/dashboard_empty_view.dart';
 

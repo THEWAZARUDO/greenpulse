@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/weather_model.dart';
 import '../services/weather_service.dart';
-import 'location_picker_dialog/location_tile.dart';
 import 'location_picker_dialog/recent_and_presets_view.dart';
 import 'location_picker_dialog/search_results_view.dart';
 

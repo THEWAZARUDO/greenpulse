@@ -6,7 +6,6 @@ import '../../services/notification_service.dart';
 import 'profile_tab/profile_header.dart';
 import 'profile_tab/section_card.dart';
 import 'profile_tab/settings_tile.dart';
-import 'profile_tab/threshold_row.dart';
 import 'profile_tab/threshold_reference_card.dart';
 import 'profile_tab/profile_dialogs.dart';
 

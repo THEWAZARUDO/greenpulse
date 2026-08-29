@@ -4,7 +4,6 @@ import '../../models/farm_model.dart';
 import '../../services/firestore_service.dart';
 import '../../services/rtdb_service.dart';
 import '../provision_screen.dart';
-import 'farms_tab/sensor_row.dart';
 import 'farms_tab/farm_management_card.dart';
 import 'farms_tab/farm_dialogs.dart';
 import 'farms_tab/farms_empty_view.dart';
