@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.greenpulse"
+    namespace = "com.greenpulse.iot"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
