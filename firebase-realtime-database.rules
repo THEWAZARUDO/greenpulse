@@ -57,6 +57,6 @@
     // Mặc định từ chối mọi đường dẫn khác ngoài "sensors" - tránh lộ node nào đó
     // lỡ thêm sau này mà quên viết rule riêng.
       ".read": "auth != null",
-      ".write": true
+      ".write": false
   }
 }

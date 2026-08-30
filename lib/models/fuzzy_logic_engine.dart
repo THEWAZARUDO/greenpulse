@@ -179,9 +179,9 @@ class FuzzyLogicEngine {
       }
 
       // Phân loại trạng thái riêng cho tham số
-      if (tapMo['nguy_hiem']! >= math.max(tapMo['binh_thuong']!, tapMo['canh_bao']!) && doLech >= 0.55) {
+      if (tapMo['nguy_hiem']! >= math.max(tapMo['binh_thuong']!, tapMo['canh_bao']!) && doLech >= 0.6) {
         trangThaiCacThamSo[tenThamSo] = 'danger';
-      } else if (tapMo['canh_bao']! > tapMo['binh_thuong']! || doLech >= 0.30) {
+      } else if (tapMo['canh_bao']! > tapMo['binh_thuong']! || doLech >= 0.25) {
         trangThaiCacThamSo[tenThamSo] = 'warning';
       } else {
         trangThaiCacThamSo[tenThamSo] = 'normal';
