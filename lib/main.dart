@@ -12,38 +12,54 @@ import 'screens/verify_email_screen.dart';
 
 import 'services/notification_service.dart';
 import 'services/weather_service.dart';
-import 'services/app_check_service.dart';
 import 'models/plant_preset_manager.dart';
-
 import 'package:firebase_messaging/firebase_messaging.dart';
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // 1. Kích hoạt lưu trữ bộ nhớ đệm ngoại tuyến (Offline Persistence)
-  FirebaseFirestore.instance.settings = const Settings(
-    persistenceEnabled: true,
-    cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
-  );
-  FirebaseDatabase.instance.setPersistenceEnabled(true);
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
 
-  // 2. Kích hoạt Firebase App Check
-  await AppCheckService.instance.init();
+    // 1. Kích hoạt lưu trữ bộ nhớ đệm ngoại tuyến (Offline Persistence)
+    FirebaseFirestore.instance.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    );
+    FirebaseDatabase.instance.setPersistenceEnabled(true);
 
-  // 3. Global Error Handler: Bắt và ghi nhận các lỗi về Firebase Crashlytics
-  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
-  PlatformDispatcher.instance.onError = (error, stack) {
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-    return true;
-  };
+    // 2. Global Error Handler: Bắt và ghi nhận các lỗi về Firebase Crashlytics
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
 
-  // 4. Đăng ký Handler xử lý tin nhắn FCM chạy nền 24/7 khi đóng app
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    // 3. Đăng ký Handler xử lý tin nhắn FCM chạy nền 24/7 khi đóng app
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  } catch (e) {
+    debugPrint('⚠️ [Init Warning] Firebase startup error: $e');
+  }
 
-  await NotificationService().init();
-  await PlantPresetManager.loadPresets();
-  await WeatherService.instance.init();
+  try {
+    await NotificationService().init();
+  } catch (e) {
+    debugPrint('⚠️ [Init Warning] NotificationService error: $e');
+  }
+
+  try {
+    await PlantPresetManager.loadPresets();
+  } catch (e) {
+    debugPrint('⚠️ [Init Warning] PlantPresetManager error: $e');
+  }
+
+  try {
+    await WeatherService.instance.init();
+  } catch (e) {
+    debugPrint('⚠️ [Init Warning] WeatherService error: $e');
+  }
+
   runApp(const MyApp());
 }
 
