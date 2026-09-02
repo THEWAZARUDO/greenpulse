@@ -1,44 +1,160 @@
 #ifndef WIFI_CONFIG_H
 #define WIFI_CONFIG_H
 
-#include <Preferences.h>
 #include <ArduinoJson.h>
 #include <WiFi.h>
 #include <WebServer.h>
 #include <Ticker.h>
 
-WebServer webServer(80);
-Ticker blinker;
-Preferences prefs;
+#define MAX_WIFI_QUEUE 10
 
-#define MAX_SAVED_NETWORKS 5
-#define PREF_NAMESPACE "gp_config"
-
-struct WifiCredential {
+struct WiFiCredential {
   String ssid;
   String password;
 };
 
-WifiCredential savedNetworks[MAX_SAVED_NETWORKS];
-int savedNetworkCount = 0;
+WebServer webServer(80);
+Ticker blinker;
 
-String activeSsid = "";
-String activeIp = "";
-String uid = "";
-String farmId = "";
-String sensorId = "";
+// Thông tin mặc định định danh người dùng / thiết bị
+String uid = "user_default";
+String farmId = "farm_01";
+String sensorId = "sensor_01";
 
 #define ledPin 2
 #define btnPin 0
 unsigned long lastTimePress = 0;
 #define PUSHTIME 5000
 
-int wifiMode = 0; // 0: AP Mode, 1: Connected STA, 2: Scanning/Connecting
+int wifiMode = 0; // 0: AP Config, 1: Connected, 2: Auto-Scanning/Reconnecting
 volatile bool needReconnect = false;
 unsigned long lastReconnectAttempt = 0;
 int retryCount = 0;
-const int MAX_RETRY = 3;
+const int MAX_RETRY_PER_NET = 3;
 unsigned long blinkTime = 0;
+
+const char html[] PROGMEM = R"html(
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GREENPULSE AUTO PROVISION</title>
+    <style>
+      body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; background-color: #f4f7f6; margin: 0; padding: 20px; }
+      .box { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%; max-width: 350px; }
+      h3 { text-align: center; color: #2E7D32; margin-top: 0; }
+      label { font-weight: bold; font-size: 13px; color: #333; }
+      input, select { width: 100%; height: 36px; margin: 5px 0 12px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; padding: 0 8px; font-size: 14px; }
+      button { width: 48%; height: 40px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; color: white; margin-top: 5px; }
+      .btn-save { background-color: #2E7D32; float: left; }
+      .btn-reset { background-color: #d32f2f; float: right; }
+      #info { font-size: 12px; text-align: center; color: #666; margin-bottom: 12px; }
+      .queue-box { background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 6px; padding: 8px; margin-bottom: 12px; font-size: 12px; max-height: 120px; overflow-y: auto; }
+      .queue-item { margin: 3px 0; padding-bottom: 3px; border-bottom: 1px dashed #a5d6a7; }
+    </style>
+</head>
+<body>
+  <div class="box">
+    <h3>🌱 GREENPULSE AUTO-PROVISION</h3>
+    <div id="queue-display" class="queue-box">
+      <strong>Danh sách mạng trong Queue (Tối đa 10):</strong>
+      <div id="queue-list">Đang tải...</div>
+    </div>
+    <p id="info">Đang quét WiFi gần bạn...</p>
+    <label>Thêm WiFi mới vào Queue:</label>
+    <select id="ssid" onchange="checkCustomSSID()"><option value="">Đang quét...</option></select>
+    <input id="custom_ssid" type="text" placeholder="Hoặc nhập tên SSID thủ công..." style="display:none;">
+    <label>Mật khẩu WiFi:</label>
+    <input id="password" type="password" placeholder="Mật khẩu WiFi">
+    <hr style="border: 0; border-top: 1px solid #eee; margin: 10px 0;">
+    <label>Firebase UID:</label>
+    <input id="uid" type="text" placeholder="UID chủ tài khoản">
+    <label>Farm ID:</label>
+    <input id="farmid" type="text" placeholder="VD: farm_01">
+    <label>Sensor ID:</label>
+    <input id="sensorid" type="text" placeholder="VD: sensor_01">
+    <div>
+      <button class="btn-save" onclick="saveWifi()">THÊM VÀO QUEUE</button>
+      <button class="btn-reset" onclick="reConnect()">KẾT NỐI NGAY</button>
+    </div>
+  </div>
+  <script>
+    window.onload = function() { scanWifi(); loadQueue(); }
+    var xhttp = new XMLHttpRequest();
+    function scanWifi() {
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          document.getElementById("info").innerHTML = "Đã quét xong danh sách WiFi!";
+          var obj = JSON.parse(this.responseText);
+          var select = document.getElementById("ssid");
+          select.innerHTML = "<option value='--custom--'>-- Nhập tên khác (Điểm phát 4G/Ẩn) --</option>";
+          for(var i=0; i<obj.length; ++i) {
+            select.options[select.options.length] = new Option(obj[i], obj[i]);
+          }
+        }
+      };
+      xhttp.open("GET", "/scanWifi", true);
+      xhttp.send();
+    }
+    function checkCustomSSID() {
+      var select = document.getElementById("ssid");
+      var customInput = document.getElementById("custom_ssid");
+      if (select.value === "--custom--") {
+        customInput.style.display = "block";
+      } else {
+        customInput.style.display = "none";
+      }
+    }
+    function loadQueue() {
+      var qHttp = new XMLHttpRequest();
+      qHttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          var list = JSON.parse(this.responseText);
+          var div = document.getElementById("queue-list");
+          if (list.length === 0) {
+            div.innerHTML = "Chưa có mạng nào.";
+          } else {
+            var html = "";
+            for (var i = 0; i < list.length; i++) {
+              html += "<div class='queue-item'>[" + (i+1) + "] <b>" + list[i].ssid + "</b></div>";
+            }
+            div.innerHTML = html;
+          }
+        }
+      };
+      qHttp.open("GET", "/getQueue", true);
+      qHttp.send();
+    }
+    function saveWifi() {
+      var select = document.getElementById("ssid");
+      var s = select.value === "--custom--" ? document.getElementById("custom_ssid").value : select.value;
+      var p = document.getElementById("password").value;
+      var u = document.getElementById("uid").value;
+      var f = document.getElementById("farmid").value;
+      var sn = document.getElementById("sensorid").value;
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          alert(this.responseText);
+          loadQueue();
+        }
+      };
+      xhttp.open("GET", "/saveWifi?ssid=" + encodeURIComponent(s) + "&pass=" + encodeURIComponent(p) + "&uid=" + encodeURIComponent(u) + "&farmid=" + encodeURIComponent(f) + "&sensorid=" + encodeURIComponent(sn), true);
+      xhttp.send();
+    }
+    function reConnect() {
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          alert("ESP32 đang tự động quét và kết nối...");
+        }
+      };
+      xhttp.open("GET", "/autoConnect", true);
+      xhttp.send();
+    }
+  </script>
+</body>
+</html>
+)html";
 
 void blinkLed(uint32_t t) {
   if (millis() - blinkTime > t) {
@@ -56,174 +172,30 @@ void ledControl() {
     }
   } else {
     if (wifiMode == 0) {
-      blinkLed(50);   // AP Mode: Nháy nhanh
+      blinkLed(50); // AP Mode
     } else if (wifiMode == 1) {
-      blinkLed(3000); // Connected: Nháy rất chậm (3s)
+      blinkLed(3000); // Online
     } else if (wifiMode == 2) {
-      blinkLed(300);  // Reconnecting/Scanning: Nháy vừa (300ms)
+      blinkLed(300); // Reconnecting / Scanning
     }
   }
 }
 
-// ==========================================
-// QUẢN LÝ LƯU TRỮ NHIỀU MẠNG (PREFERENCES / NVS)
-// ==========================================
-void loadConfigFromNVS() {
-  prefs.begin(PREF_NAMESPACE, false);
-
-  uid = prefs.getString("uid", "");
-  farmId = prefs.getString("farmId", "");
-  sensorId = prefs.getString("sensorId", "");
-
-  uid.trim();
-  farmId.trim();
-  sensorId.trim();
-
-  String networksJson = prefs.getString("networks", "[]");
-  savedNetworkCount = 0;
-
-#if ARDUINOJSON_VERSION_MAJOR >= 7
-  JsonDocument doc;
-#else
-  DynamicJsonDocument doc(1024);
-#endif
-  DeserializationError error = deserializeJson(doc, networksJson);
-  if (!error && doc.is<JsonArray>()) {
-    JsonArray arr = doc.as<JsonArray>();
-    for (JsonObject obj : arr) {
-      if (savedNetworkCount < MAX_SAVED_NETWORKS) {
-        String s = obj["ssid"] | "";
-        String p = obj["pass"] | "";
-        s.trim();
-        p.trim();
-        if (s.length() > 0) {
-          savedNetworks[savedNetworkCount].ssid = s;
-          savedNetworks[savedNetworkCount].password = p;
-          savedNetworkCount++;
-        }
-      }
-    }
-  }
-
-  prefs.end();
-
-  Serial.println("\n--- THONG TIN DA LUU (MULTI-NETWORK) ---");
-  Serial.println("UID: " + (uid.length() > 0 ? uid : "[Chua co]"));
-  Serial.println("FarmID: " + (farmId.length() > 0 ? farmId : "[Chua co]"));
-  Serial.println("SensorID: " + (sensorId.length() > 0 ? sensorId : "[Chua co]"));
-  Serial.printf("So mang da luu: %d/%d\n", savedNetworkCount, MAX_SAVED_NETWORKS);
-  for (int i = 0; i < savedNetworkCount; i++) {
-    Serial.printf("  [%d] SSID: '%s'\n", i + 1, savedNetworks[i].ssid.c_str());
-  }
-  Serial.println("----------------------------------------");
-}
-
-void saveConfigToNVS() {
-  prefs.begin(PREF_NAMESPACE, false);
-  prefs.putString("uid", uid);
-  prefs.putString("farmId", farmId);
-  prefs.putString("sensorId", sensorId);
-
-#if ARDUINOJSON_VERSION_MAJOR >= 7
-  JsonDocument doc;
-#else
-  DynamicJsonDocument doc(1024);
-#endif
-  JsonArray arr = doc.to<JsonArray>();
-  for (int i = 0; i < savedNetworkCount; i++) {
-    JsonObject obj = arr.add<JsonObject>();
-    obj["ssid"] = savedNetworks[i].ssid;
-    obj["pass"] = savedNetworks[i].password;
-  }
-
-  String jsonStr = "";
-  serializeJson(doc, jsonStr);
-  prefs.putString("networks", jsonStr);
-  prefs.end();
-
-  Serial.printf("[NVS] Da luu %d mang WiFi va thong tin UID/FarmID thanh cong.\n", savedNetworkCount);
-}
-
-bool addOrUpdateNetwork(String newSsid, String newPass) {
-  newSsid.trim();
-  newPass.trim();
-  if (newSsid.length() == 0) return false;
-
-  // 1. Nếu SSID đã tồn tại -> Cập nhật mật khẩu
-  for (int i = 0; i < savedNetworkCount; i++) {
-    if (savedNetworks[i].ssid.equalsIgnoreCase(newSsid)) {
-      savedNetworks[i].password = newPass;
-      saveConfigToNVS();
-      return true;
-    }
-  }
-
-  // 2. Nếu chưa có và danh sách chưa đầy -> Thêm vào cuối
-  if (savedNetworkCount < MAX_SAVED_NETWORKS) {
-    savedNetworks[savedNetworkCount].ssid = newSsid;
-    savedNetworks[savedNetworkCount].password = newPass;
-    savedNetworkCount++;
-    saveConfigToNVS();
-    return true;
-  }
-
-  // 3. Nếu danh sách đã đầy (5/5) -> Ghi đè vào mạng cũ nhất (index 0)
-  for (int i = 0; i < MAX_SAVED_NETWORKS - 1; i++) {
-    savedNetworks[i] = savedNetworks[i + 1];
-  }
-  savedNetworks[MAX_SAVED_NETWORKS - 1].ssid = newSsid;
-  savedNetworks[MAX_SAVED_NETWORKS - 1].password = newPass;
-  saveConfigToNVS();
-  return true;
-}
-
-bool removeNetwork(String targetSsid) {
-  targetSsid.trim();
-  int foundIdx = -1;
-  for (int i = 0; i < savedNetworkCount; i++) {
-    if (savedNetworks[i].ssid.equalsIgnoreCase(targetSsid)) {
-      foundIdx = i;
-      break;
-    }
-  }
-
-  if (foundIdx != -1) {
-    for (int i = foundIdx; i < savedNetworkCount - 1; i++) {
-      savedNetworks[i] = savedNetworks[i + 1];
-    }
-    savedNetworkCount--;
-    saveConfigToNVS();
-    return true;
-  }
-  return false;
-}
-
-void clearAllConfig() {
-  prefs.begin(PREF_NAMESPACE, false);
-  prefs.clear();
-  prefs.end();
-  savedNetworkCount = 0;
-  uid = farmId = sensorId = activeSsid = activeIp = "";
-  Serial.println("[NVS] Da xoa sach toan bo cau hinh va danh sach mang!");
-}
-
-// ==========================================
-// WIFI EVENTS & TỰ ĐỘNG QUÉT KẾT NỐI (AUTOPROVISION)
-// ==========================================
 void WiFiEvent(WiFiEvent_t event) {
   switch (event) {
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
-      activeIp = WiFi.localIP().toString();
-      activeSsid = WiFi.SSID();
-      Serial.println("\n[WiFi] Da ket noi thanh cong!");
-      Serial.printf("[WiFi] Mang dang ket noi: '%s' | IP: %s\n", activeSsid.c_str(), activeIp.c_str());
+      Serial.println("\n[WiFi AutoProvision] DA KET NOI THANH CONG!");
+      Serial.print("[WiFi] IP ESP32: ");
+      Serial.println(WiFi.localIP());
+      Serial.print("[WiFi] Dang ket noi toi SSID: ");
+      Serial.println(WiFi.SSID());
       wifiMode = 1;
       retryCount = 0;
       needReconnect = false;
       break;
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
       if (wifiMode != 0) {
-        Serial.println("\n[WiFi] Mat ket noi STA.");
+        Serial.println("\n[WiFi] Mat ket noi. Chuan bi Auto-Provision lai...");
         wifiMode = 2;
         needReconnect = true;
       }
@@ -233,160 +205,149 @@ void WiFiEvent(WiFiEvent_t event) {
   }
 }
 
+class AutoProvisionManager {
+private:
+  WiFiCredential wifiQueue[MAX_WIFI_QUEUE];
+  int queueCount = 0;
+  int currentQueueIndex = 0;
+
+public:
+  AutoProvisionManager() {}
+
+  /// Thêm một mạng mới vào Queue (tối đa 10 mạng).
+  /// Nếu mạng đã tồn tại thì cập nhật mật khẩu, nếu đầy 10 mạng thì ghi đè mạng cũ nhất (FIFO).
+  bool addNetwork(String ssidIn, String passIn) {
+    ssidIn.trim();
+    passIn.trim();
+    if (ssidIn.length() == 0) return false;
+
+    // 1. Nếu SSID đã có trong Queue, cập nhật lại mật khẩu
+    for (int i = 0; i < queueCount; i++) {
+      if (wifiQueue[i].ssid.equalsIgnoreCase(ssidIn)) {
+        wifiQueue[i].password = passIn;
+        Serial.printf("[AutoProvision] Cap nhat mat khau cho: %s\n", ssidIn.c_str());
+        return true;
+      }
+    }
+
+    // 2. Nếu Queue chưa đầy, thêm vào cuối
+    if (queueCount < MAX_WIFI_QUEUE) {
+      wifiQueue[queueCount].ssid = ssidIn;
+      wifiQueue[queueCount].password = passIn;
+      queueCount++;
+      Serial.printf("[AutoProvision] Da them vao Queue [%d/%d]: %s\n", queueCount, MAX_WIFI_QUEUE, ssidIn.c_str());
+      return true;
+    }
+
+    // 3. Nếu Queue đã đầy 10 mạng, đẩy mạng cũ nhất ra (FIFO) và chèn vào cuối
+    for (int i = 0; i < MAX_WIFI_QUEUE - 1; i++) {
+      wifiQueue[i] = wifiQueue[i + 1];
+    }
+    wifiQueue[MAX_WIFI_QUEUE - 1].ssid = ssidIn;
+    wifiQueue[MAX_WIFI_QUEUE - 1].password = passIn;
+    Serial.printf("[AutoProvision] Queue day (10) -> Day mang cu ra, them mang moi: %s\n", ssidIn.c_str());
+    return true;
+  }
+
+  int getCount() const { return queueCount; }
+
+  WiFiCredential getNetwork(int index) const {
+    if (index >= 0 && index < queueCount) return wifiQueue[index];
+    return {"", ""};
+  }
+
+  void clearQueue() {
+    queueCount = 0;
+    currentQueueIndex = 0;
+    Serial.println("[AutoProvision] Da xoa toan bo Queue WiFi!");
+  }
+
+  /// Tự động quét các sóng WiFi xung quanh và đối chiếu với 10 mạng trong Queue.
+  /// Mạng nào có trong Queue và sóng mạnh nhất sẽ được ưu tiên kết nối trước!
+  bool autoScanAndConnect() {
+    if (queueCount == 0) {
+      Serial.println("[AutoProvision] Queue rong, khong co mang nao de ket noi!");
+      return false;
+    }
+
+    Serial.println("\n[AutoProvision] Dang quet cac song WiFi xung quanh de tim mang phu hop...");
+    WiFi.mode(WIFI_STA);
+    WiFi.disconnect(true);
+    delay(100);
+
+    int n = WiFi.scanNetworks();
+    Serial.printf("[AutoProvision] Tim thay %d song WiFi xung quanh.\n", n);
+
+    int bestMatchQueueIdx = -1;
+    int bestRSSI = -999;
+
+    for (int i = 0; i < n; ++i) {
+      String scannedSSID = WiFi.SSID(i);
+      int scannedRSSI = WiFi.RSSI(i);
+
+      for (int q = 0; q < queueCount; q++) {
+        if (scannedSSID.equalsIgnoreCase(wifiQueue[q].ssid)) {
+          Serial.printf("  -> Khop mang trong Queue: '%s' (RSSI: %d dBm)\n", scannedSSID.c_str(), scannedRSSI);
+          if (scannedRSSI > bestRSSI) {
+            bestRSSI = scannedRSSI;
+            bestMatchQueueIdx = q;
+          }
+        }
+      }
+    }
+
+    if (bestMatchQueueIdx != -1) {
+      WiFiCredential target = wifiQueue[bestMatchQueueIdx];
+      Serial.printf("[AutoProvision] -> Chon mang tot nhat: '%s'\n", target.ssid.c_str());
+      connectTo(target.ssid, target.password);
+      return true;
+    }
+
+    // Nếu scan không thấy (hoặc là điểm phát sóng di động ẩn như 4G OPPO), thử lần lượt từng mạng trong Queue
+    Serial.println("[AutoProvision] Khong thay mang khop khi scan -> Thu ket noi tuan tu trong Queue...");
+    return tryNextInQueue();
+  }
+
+  bool tryNextInQueue() {
+    if (queueCount == 0) return false;
+    WiFiCredential target = wifiQueue[currentQueueIndex];
+    currentQueueIndex = (currentQueueIndex + 1) % queueCount;
+
+    Serial.printf("[AutoProvision] Thu ket noi mang trong Queue: '%s'...\n", target.ssid.c_str());
+    connectTo(target.ssid, target.password);
+    return true;
+  }
+
+  void connectTo(String s, String p) {
+    WiFi.mode(WIFI_STA);
+    WiFi.setTxPower(WIFI_POWER_11dBm); // Chống sụt áp
+    WiFi.begin(s.c_str(), p.c_str());
+    wifiMode = 2; // Reconnecting
+    lastReconnectAttempt = millis();
+  }
+} autoProvision;
+
 void startAccessPoint() {
   Serial.println("\n[WiFi] Dang mo Access Point de cau hinh...");
   WiFi.disconnect(true);
   delay(100);
   WiFi.mode(WIFI_AP);
   WiFi.setTxPower(WIFI_POWER_11dBm);
-
+  
   uint8_t macAddr[6];
   WiFi.softAPmacAddress(macAddr);
   String ssid_ap = "GreenPulse_Setup_" + String(macAddr[4], HEX) + String(macAddr[5], HEX);
   ssid_ap.toUpperCase();
-
+  
   WiFi.softAP(ssid_ap.c_str());
   Serial.println("[WiFi] Ten AP: " + ssid_ap);
   Serial.println("[WiFi] IP trang cau hinh: " + WiFi.softAPIP().toString());
   wifiMode = 0;
 }
 
-/// Thuật toán AutoProvision: Quét các mạng xung quanh và tự động kết nối vào mạng đã lưu có sóng mạnh nhất
-bool autoScanAndConnect() {
-  if (savedNetworkCount == 0) {
-    Serial.println("[AutoProvision] Chua co mang nao duoc luu -> Mo AP.");
-    startAccessPoint();
-    return false;
-  }
-
-  Serial.println("\n[AutoProvision] Dang quet cac mang Wi-Fi 2.4GHz xung quanh...");
-  WiFi.mode(WIFI_STA);
-  WiFi.setTxPower(WIFI_POWER_11dBm);
-  WiFi.disconnect(true);
-  delay(100);
-
-  int n = WiFi.scanNetworks();
-  Serial.printf("[AutoProvision] Tim thay %d mang Wi-Fi xung quanh.\n", n);
-
-  int bestSavedIdx = -1;
-  int bestRssi = -999;
-
-  // So khớp danh sách quét được với các mạng đã lưu
-  for (int i = 0; i < n; ++i) {
-    String scannedSsid = WiFi.SSID(i);
-    int scannedRssi = WiFi.RSSI(i);
-
-    for (int j = 0; j < savedNetworkCount; ++j) {
-      if (savedNetworks[j].ssid == scannedSsid) {
-        Serial.printf("  -> Khop mang da luu: '%s' (RSSI: %d dBm)\n", scannedSsid.c_str(), scannedRssi);
-        if (scannedRssi > bestRssi) {
-          bestRssi = scannedRssi;
-          bestSavedIdx = j;
-        }
-      }
-    }
-  }
-
-  if (bestSavedIdx != -1) {
-    String targetSsid = savedNetworks[bestSavedIdx].ssid;
-    String targetPass = savedNetworks[bestSavedIdx].password;
-    Serial.printf("[AutoProvision] Ket noi tu dong vao mang tot nhat: '%s' (RSSI: %d dBm)...\n",
-                  targetSsid.c_str(), bestRssi);
-
-    WiFi.begin(targetSsid.c_str(), targetPass.c_str());
-    wifiMode = 2;
-    lastReconnectAttempt = millis();
-    return true;
-  }
-
-  // Nếu không thấy trong danh sách quét (mạng ẩn hoặc quét sót), thử kết nối lần lượt các mạng đã lưu
-  Serial.println("[AutoProvision] Khong tim thay mang nao trong pham vi quet. Thu ket noi mang da luu dau tien...");
-  WiFi.begin(savedNetworks[0].ssid.c_str(), savedNetworks[0].password.c_str());
-  wifiMode = 2;
-  lastReconnectAttempt = millis();
-  return true;
-}
-
-// ==========================================
-// GIAO DIỆN WEB CẤU HÌNH & REST APIS
-// ==========================================
-String generateHtml() {
-  String html = "<!DOCTYPE html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>";
-  html += "<title>GREENPULSE AUTOPROVISION</title><style>";
-  html += "body { font-family: Arial, sans-serif; display: flex; justify-content: center; background-color: #f4f7f6; margin: 0; padding: 15px; }";
-  html += ".box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 360px; }";
-  html += "h3 { text-align: center; color: #2E7D32; margin-top: 0; }";
-  html += "label { font-weight: bold; font-size: 13px; color: #333; margin-top: 8px; display: block; }";
-  html += "input, select { width: 100%; height: 36px; margin: 4px 0 10px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; padding: 0 8px; font-size: 14px; }";
-  html += "button { width: 48%; height: 38px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; margin-top: 8px; }";
-  html += ".btn-save { background-color: #2E7D32; float: left; }";
-  html += ".btn-reset { background-color: #d32f2f; float: right; }";
-  html += ".net-tag { display: inline-block; background: #e8f5e9; color: #2e7d32; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin: 2px 2px 2px 0; border: 1px solid #c8e6c9; }";
-  html += "#info { font-size: 12px; text-align: center; color: #666; margin-bottom: 12px; }";
-  html += "</style></head><body><div class='box'>";
-  html += "<h3>🌱 GREENPULSE SETUP</h3>";
-  html += "<p id='info'>Dang quet WiFi xung quanh...</p>";
-
-  // Danh sách các mạng đã lưu
-  html += "<label>Mang da luu (" + String(savedNetworkCount) + "/" + String(MAX_SAVED_NETWORKS) + "):</label><div>";
-  if (savedNetworkCount == 0) {
-    html += "<span style='font-size:12px; color:#888;'>Chua co mang nao</span>";
-  } else {
-    for (int i = 0; i < savedNetworkCount; i++) {
-      html += "<span class='net-tag'>📶 " + savedNetworks[i].ssid + "</span>";
-    }
-  }
-  html += "</div><hr style='border:0; border-top:1px solid #eee; margin:12px 0;'>";
-
-  html += "<label>Chon WiFi:</label><select id='ssid'><option value=''>Dang quet...</option></select>";
-  html += "<label>Hoac tu nhap SSID:</label><input id='customSsid' type='text' placeholder='Ten WiFi (neu an)'>";
-  html += "<label>Mat khau WiFi:</label><input id='password' type='password' placeholder='Mat khau WiFi'>";
-  html += "<hr style='border:0; border-top:1px solid #eee; margin:12px 0;'>";
-  html += "<label>Firebase UID:</label><input id='uid' type='text' value='" + uid + "' placeholder='UID chu tai khoan'>";
-  html += "<label>Farm ID:</label><input id='farmid' type='text' value='" + farmId + "' placeholder='VD: farm_01'>";
-  html += "<label>Sensor ID:</label><input id='sensorid' type='text' value='" + sensorId + "' placeholder='VD: sensor_01'>";
-  html += "<div><button class='btn-save' onclick='saveWifi()'>LƯU MẠNG</button>";
-  html += "<button class='btn-reset' onclick='reStart()'>KHOI DONG</button></div></div>";
-
-  html += "<script>";
-  html += "window.onload = function() { scanWifi(); };";
-  html += "var xhttp = new XMLHttpRequest();";
-  html += "function scanWifi() {";
-  html += "  xhttp.onreadystatechange = function() {";
-  html += "    if (this.readyState == 4 && this.status == 200) {";
-  html += "      document.getElementById('info').innerHTML = 'Da tim thay cac mang xung quanh!';";
-  html += "      var list = JSON.parse(this.responseText);";
-  html += "      var select = document.getElementById('ssid'); select.innerHTML = '';";
-  html += "      select.options[select.options.length] = new Option('-- Chon mang quet duoc --', '');";
-  html += "      for (var i = 0; i < list.length; ++i) { select.options[select.options.length] = new Option(list[i], list[i]); }";
-  html += "    }";
-  html += "  };";
-  html += "  xhttp.open('GET', '/scanWifi', true); xhttp.send();";
-  html += "}";
-  html += "function saveWifi() {";
-  html += "  var sel = document.getElementById('ssid').value;";
-  html += "  var cus = document.getElementById('customSsid').value.trim();";
-  html += "  var s = cus.length > 0 ? cus : sel;";
-  html += "  var p = document.getElementById('password').value;";
-  html += "  var u = document.getElementById('uid').value;";
-  html += "  var f = document.getElementById('farmid').value;";
-  html += "  var sn = document.getElementById('sensorid').value;";
-  html += "  if (!s && !u) { alert('Vui long nhap it nhat ten WiFi hoac UID!'); return; }";
-  html += "  xhttp.onreadystatechange = function() { if (this.readyState == 4 && this.status == 200) { alert(this.responseText); } };";
-  html += "  xhttp.open('GET', '/saveWifi?ssid=' + encodeURIComponent(s) + '&pass=' + encodeURIComponent(p) + '&uid=' + encodeURIComponent(u) + '&farmid=' + encodeURIComponent(f) + '&sensorid=' + encodeURIComponent(sn), true);";
-  html += "  xhttp.send();";
-  html += "}";
-  html += "function reStart() {";
-  html += "  xhttp.onreadystatechange = function() { if (this.readyState == 4 && this.status == 200) { alert('ESP32 dang khoi dong lai de ket noi mang...'); } };";
-  html += "  xhttp.open('GET', '/reStart', true); xhttp.send();";
-  html += "}";
-  html += "</script></body></html>";
-  return html;
-}
-
 void setupWebServer() {
   webServer.on("/", []() {
-    webServer.send(200, "text/html", generateHtml());
+    webServer.send(200, "text/html", html);
   });
 
   webServer.on("/scanWifi", []() {
@@ -404,29 +365,19 @@ void setupWebServer() {
     webServer.send(200, "application/json", wifiList);
   });
 
-  // API xem danh sách các mạng đã lưu trong bộ nhớ
-  webServer.on("/networks", []() {
+  webServer.on("/getQueue", []() {
 #if ARDUINOJSON_VERSION_MAJOR >= 7
     JsonDocument doc;
 #else
-    DynamicJsonDocument doc(1024);
+    DynamicJsonDocument doc(512);
 #endif
-    doc["activeSsid"] = activeSsid;
-    doc["activeIp"] = activeIp;
-    doc["uid"] = uid;
-    doc["farmId"] = farmId;
-    doc["sensorId"] = sensorId;
-    doc["wifiMode"] = (wifiMode == 1 ? "CONNECTED" : (wifiMode == 0 ? "AP_MODE" : "CONNECTING"));
-
-    JsonArray arr = doc["savedNetworks"].to<JsonArray>();
-    for (int i = 0; i < savedNetworkCount; i++) {
-      JsonObject obj = arr.add<JsonObject>();
-      obj["ssid"] = savedNetworks[i].ssid;
+    for (int i = 0; i < autoProvision.getCount(); i++) {
+      JsonObject item = doc.add<JsonObject>();
+      item["ssid"] = autoProvision.getNetwork(i).ssid;
     }
-
-    String res = "";
-    serializeJson(doc, res);
-    webServer.send(200, "application/json", res);
+    String listStr = "";
+    serializeJson(doc, listStr);
+    webServer.send(200, "application/json", listStr);
   });
 
   auto handleSave = []() {
@@ -436,7 +387,7 @@ void setupWebServer() {
     String farmid_temp = "";
     String sensorid_temp = "";
 
-    // 1. Nhận JSON từ App Flutter
+    // 1. Nhận JSON từ App Mobile
     if (webServer.hasArg("plain")) {
 #if ARDUINOJSON_VERSION_MAJOR >= 7
       JsonDocument doc;
@@ -445,17 +396,11 @@ void setupWebServer() {
 #endif
       DeserializationError err = deserializeJson(doc, webServer.arg("plain"));
       if (!err) {
-        const char* val_ssid = doc["wifiSsid"] | doc["ssid"] | "";
-        const char* val_pass = doc["wifiPass"] | doc["pass"] | doc["password"] | "";
-        const char* val_uid = doc["uid"] | "";
-        const char* val_farm = doc["farmId"] | doc["farmid"] | "";
-        const char* val_sensor = doc["sensorId"] | doc["sensorid"] | "";
-
-        ssid_temp = String(val_ssid);
-        password_temp = String(val_pass);
-        uid_temp = String(val_uid);
-        farmid_temp = String(val_farm);
-        sensorid_temp = String(val_sensor);
+        ssid_temp = (const char*)(doc["wifiSsid"] | doc["ssid"] | "");
+        password_temp = (const char*)(doc["wifiPass"] | doc["pass"] | doc["password"] | "");
+        uid_temp = (const char*)(doc["uid"] | "");
+        farmid_temp = (const char*)(doc["farmId"] | doc["farmid"] | "");
+        sensorid_temp = (const char*)(doc["sensorId"] | doc["sensorid"] | "");
       }
     }
 
@@ -470,47 +415,24 @@ void setupWebServer() {
 
     ssid_temp.trim();
     password_temp.trim();
-    uid_temp.trim();
-    farmid_temp.trim();
-    sensorid_temp.trim();
-
     if (uid_temp.length() > 0) uid = uid_temp;
     if (farmid_temp.length() > 0) farmId = farmid_temp;
     if (sensorid_temp.length() > 0) sensorId = sensorid_temp;
 
     if (ssid_temp.length() > 0) {
-      addOrUpdateNetwork(ssid_temp, password_temp);
+      autoProvision.addNetwork(ssid_temp, password_temp);
+      webServer.send(200, "text/plain", "Da them mang vao Queue thanh cong!");
     } else {
-      saveConfigToNVS();
+      webServer.send(400, "text/plain", "SSID khong duoc de trong!");
     }
-
-    Serial.printf("[WebServer] Da luu mang '%s', UID='%s', FarmID='%s', SensorID='%s'\n",
-                  ssid_temp.c_str(), uid.c_str(), farmId.c_str(), sensorId.c_str());
-
-    webServer.send(200, "text/plain", "Da luu thanh cong vao danh sach AutoProvision! ESP32 dang khoi dong lai de tu dong ket noi...");
-    delay(1500);
-    ESP.restart();
   };
 
   webServer.on("/saveWifi", handleSave);
   webServer.on("/config", HTTP_POST, handleSave);
 
-  // Xóa 1 mạng cụ thể: /deleteWifi?ssid=TenMang
-  webServer.on("/deleteWifi", []() {
-    if (webServer.hasArg("ssid")) {
-      String delSsid = webServer.arg("ssid");
-      if (removeNetwork(delSsid)) {
-        webServer.send(200, "text/plain", "Da xoa mang '" + delSsid + "' khoi danh sach AutoProvision.");
-        return;
-      }
-    }
-    webServer.send(400, "text/plain", "Khong tim thay mang de xoa.");
-  });
-
-  webServer.on("/reStart", []() {
-    webServer.send(200, "text/plain", "ESP32 dang khoi dong lai...");
-    delay(1000);
-    ESP.restart();
+  webServer.on("/autoConnect", []() {
+    webServer.send(200, "text/plain", "Dang bat dau Auto-Provision...");
+    autoProvision.autoScanAndConnect();
   });
 
   webServer.begin();
@@ -519,10 +441,10 @@ void setupWebServer() {
 void checkButton() {
   if (digitalRead(btnPin) == LOW) {
     if (millis() - lastTimePress > PUSHTIME) {
-      Serial.println("[Button] Dang xoa sach toan bo cau hinh...");
-      clearAllConfig();
+      Serial.println("[Button] Xoa toan bo Queue va khoi dong lai...");
+      autoProvision.clearQueue();
+      startAccessPoint();
       delay(1000);
-      ESP.restart();
     }
   } else {
     lastTimePress = millis();
@@ -536,33 +458,45 @@ public:
     pinMode(btnPin, INPUT_PULLUP);
     blinker.attach_ms(50, ledControl);
 
-    loadConfigFromNVS();
+    // =========================================================================
+    // KHỞI TẠO CÁC MẠNG SẴN TRONG QUEUE (Tối đa 10 mạng, không cần EEPROM)
+    // Bạn có thể thêm sẵn điểm phát sóng 4G OPPO, WiFi nhà, WiFi nông trại ở đây:
+    // =========================================================================
+    autoProvision.addNetwork("OPPO", "12345678");               // 1. Điểm phát 4G điện thoại OPPO
+    autoProvision.addNetwork("GreenPulse_Home", "123456789");   // 2. WiFi nhà
+    autoProvision.addNetwork("GreenPulse_Farm", "greenpulse88");// 3. WiFi nông trại
+    // Thêm các mạng khác nếu muốn (tối đa 10)...
 
     WiFi.onEvent(WiFiEvent);
     setupWebServer();
 
-    // Khởi động AutoProvision tự động quét và kết nối
-    autoScanAndConnect();
+    // Bắt đầu tự động quét và kết nối mạng khả dụng
+    if (!autoProvision.autoScanAndConnect()) {
+      startAccessPoint();
+    }
+  }
+
+  void addNetwork(String s, String p) {
+    autoProvision.addNetwork(s, p);
   }
 
   void run() {
     checkButton();
     webServer.handleClient();
 
-    // Cơ chế tự động thử lại khi mất mạng (Auto-Reconnect fallback)
     if (needReconnect && wifiMode != 0) {
       unsigned long now = millis();
-      if (now - lastReconnectAttempt > 10000) {
+      if (now - lastReconnectAttempt > 8000) {
         lastReconnectAttempt = now;
         retryCount++;
-        Serial.printf("[WiFi] Thu quet va ket noi lai lan %d/%d...\n", retryCount, MAX_RETRY);
+        Serial.printf("[AutoProvision] Thu ket noi lai lan %d/%d...\n", retryCount, MAX_RETRY_PER_NET * autoProvision.getCount());
 
-        if (retryCount >= MAX_RETRY) {
-          Serial.println("[WiFi] Ket noi that bai sau nhieu lan thu. Chuyen sang che do AP de cau hinh!");
+        if (retryCount >= MAX_RETRY_PER_NET * autoProvision.getCount()) {
+          Serial.println("[WiFi] Thu tat ca cac mang trong Queue deu khong duoc. Chuyen ve AP!");
           needReconnect = false;
           startAccessPoint();
         } else {
-          autoScanAndConnect();
+          autoProvision.tryNextInQueue();
         }
       }
     }

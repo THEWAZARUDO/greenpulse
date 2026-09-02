@@ -205,12 +205,7 @@ void drawPage3() {
   display.print("ADS1115: "); display.println(adsOK ? "OK" : "ERR");
   display.print("Soil ADC: "); display.println(soilADC);
   display.print("pH ADC: "); display.println(phADC);
-  display.print("WiFi: ");
-  if (WiFi.status() == WL_CONNECTED) {
-    display.println(WiFi.SSID());
-  } else {
-    display.println(wifiMode == 0 ? "AP_SETUP" : "CONNECTING");
-  }
+  display.print("WiFi: "); display.println(WiFi.status() == WL_CONNECTED ? "ONLINE" : "OFFLINE/AP");
   display.display();
 }
 
