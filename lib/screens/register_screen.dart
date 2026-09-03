@@ -38,7 +38,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         username: _usernameCtrl.text,
       );
       try {
-        await _authService.sendEmailVerification();
+        await _authService.sendEmailVerification(targetEmail: _emailCtrl.text);
       } catch (_) {}
 
       // authStateChanges và AuthGate sẽ chuyển sang VerifyEmailScreen
