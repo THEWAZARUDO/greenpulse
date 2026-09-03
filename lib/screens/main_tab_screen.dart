@@ -151,7 +151,7 @@ class _MainTabScreenState extends State<MainTabScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            '🚨 CẢNH BÁO ĐỎ - PHÁT HIỆN SỰ CỐ',
+                            'CẢNH BÁO ĐỎ - PHÁT HIỆN SỰ CỐ',
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
