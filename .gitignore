@@ -53,3 +53,5 @@ lib/services/ai_api_service.dart
 ~*.tmp
 
 
+# Widget Preview related
+.widget_preview/
