@@ -82,14 +82,14 @@ ightarrow 100$.
 ### 2.2. Bảng kết quả thực nghiệm khoa học so sánh bước chia lưới N:
 *(Đo đạc trên 500 kịch bản ngẫu nhiên so với chuẩn đối chứng Ground Truth N = 100,000)*
 
-| Số điểm lưới (N) | Bước nhảy lưới $\Delta z$ | Sai số TB (MAE) | Sai số Cực đại | Tốc độ xử lý | Đánh giá Kỹ thuật & Nông học |
+| Số điểm (N) | $\Delta z$ | Sai số TB | Sai số Cực đại | Tốc độ xử lý | Đánh giá Kỹ thuật & Nông học |
 | :---: | :---: | :---: | :---: | :---: | :--- |
-| **N = 10** | 11.111 điểm | 1.94611 điểm | 4.22769 điểm | ~85,000 ops/s | ❌ Sai số lớn (> 4 điểm), dễ nhảy sai phân cấp cảnh báo. |
-| **N = 50** | 2.040 điểm | 0.33968 điểm | 0.67938 điểm | 62,305 ops/s | ⚠️ Tương đối tốt nhưng biên tích phân còn thô. |
-| **N = 100** | 1.010 điểm | 0.16753 điểm | 0.31228 điểm | 45,455 ops/s | 🟢 Chuẩn cho các ứng dụng cơ bản. |
-| **N = 200 (GreenPulse)** | **0.502 điểm** | **0.19883 điểm** | **0.37847 điểm** | **26,918 ops/s** | 🎯 **Điểm cân bằng Pareto tối ưu**: Độ chính xác 99.80%, độ trễ 37.16 µs, không giật lag. |
-| **N = 300** | 0.334 điểm | 0.05546 điểm | 0.10005 điểm | 20,305 ops/s | 🟢 Rất mịn, tăng thêm khối lượng tính toán CPU. |
-| **N = 500** | 0.200 điểm | 0.03323 điểm | 0.05996 điểm | 13,324 ops/s | ⚠️ Quá mức cần thiết cho nông học, gây hao pin thiết bị. |
+| **N = 10** | 11.111 điểm | 1.94611 điểm | 4.22769 điểm | ~85,000 ops/s |  Sai số lớn (> 4 điểm), dễ nhảy sai phân cấp cảnh báo. |
+| **N = 50** | 2.040 điểm | 0.33968 điểm | 0.67938 điểm | 62,305 ops/s |  Tương đối tốt nhưng biên tích phân còn thô. |
+| **N = 100** | 1.010 điểm | 0.16753 điểm | 0.31228 điểm | 45,455 ops/s |  Chuẩn cho các ứng dụng cơ bản. |
+| **N = 200 (GreenPulse)** | **0.502 điểm** | **0.19883 điểm** | **0.37847 điểm** | **26,918 ops/s** |  **Điểm cân bằng Pareto tối ưu**: Độ chính xác 99.80%, độ trễ 37.16 µs, không giật lag. |
+| **N = 300** | 0.334 điểm | 0.05546 điểm | 0.10005 điểm | 20,305 ops/s |  Rất mịn, tăng thêm khối lượng tính toán CPU. |
+| **N = 500** | 0.200 điểm | 0.03323 điểm | 0.05996 điểm | 13,324 ops/s |  Độ chính xác cao quá mức cần thiết, gây hao pin thiết bị. |
 
 ---
 
