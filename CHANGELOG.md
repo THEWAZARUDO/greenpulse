@@ -2,19 +2,6 @@
 
 Tài liệu này ghi lại toàn bộ lịch sử phát triển, nâng cấp kiến trúc, tối ưu thuật toán và sửa lỗi của hệ sinh thái GreenPulse (Hệ thống Giám sát & Điều khiển Nông nghiệp Thông minh IoT - Mobile App - Edge AI).
 
-Định dạng tài liệu tuân thủ chuẩn quốc tế Keep a Changelog và phân định phiên bản theo Semantic Versioning.
-
----
-
-## Mục lục các phiên bản
-* [v1.1.0 - 03/09/2026](#110---2026-09-03) (AutoProvision ESP32 Đa Mạng, Backend Auth-Web & Cập nhật App Icon)
-* [v1.0.0 - 30/08/2026](#100---2026-08-30) (Module Hóa Toàn Bộ Mã Nguồn, Security Rules & Preset Cây Trồng)
-* [v0.9.0 - 29/08/2026](#090---2026-08-29) (Tối Ưu Mamdani Fuzzy, Dự Báo Thời Tiết Open-Meteo & Bộ Test Tự Động)
-* [v0.5.0 - 26/08/2026](#050---2026-08-26) (Hệ Thống Cảnh Báo FCM 24/7 & Nâng Cấp Nền Tảng Android/iOS)
-* [v0.3.0 - 18/08/2026](#030---2026-08-18) (Chuyển Đổi Sang Edge AI Fuzzy Cục Bộ & Fast-Path 0ms)
-* [v0.2.0 - 24/07/2026](#020---2026-07-24) (Tối Ưu Stream RTDB Duy Nhất & Đánh Thức Render AI Cold-Start)
-* [v0.1.0 - 24/07/2026](#010---2026-07-24) (Khởi Tạo Nền Tảng GreenPulse, Auth & Giao Diện Cơ Bản)
-
 ---
 
 ## [1.1.0] - 2026-09-03

@@ -76,7 +76,8 @@ GreenPulse vận hành theo mô hình **Serverless Dual-Engine + Client Edge AI*
    * Trọng số mặc định: Ẩm đất (0.25), Nhiệt độ (0.25), Ẩm khí (0.20), pH (0.15), Ánh sáng (0.15).
    * **Dynamic Weight Normalization:** Khi một cảm biến mất kết nối (ví dụ đứt cáp pH), hệ thống tự động co giãn tổng trọng số các cảm biến còn lại về tổng trọng số = 1.0, tránh gán giá trị 0.0 gây báo động giả.
 4. **Suy diễn Mamdani Min-Max:** Cắt đỉnh tập mờ đầu ra bằng phép Min và hợp nhất bằng phép Max.
-5. **Giải mờ Trọng tâm (Centroid Defuzzification) trên lưới N=200:** Rời rạc hóa tích phân liên tục thành 200 điểm chia trên thang [0, 100], tính điểm rủi ro $0 ightarrow 100$.
+5. **Giải mờ Trọng tâm (Centroid Defuzzification) trên lưới N=200:** Rời rạc hóa tích phân liên tục thành 200 điểm chia trên thang [0, 100], tính điểm rủi ro $0 
+ightarrow 100$.
 
 ### 2.2. Bảng kết quả thực nghiệm khoa học so sánh bước chia lưới N:
 *(Đo đạc trên 500 kịch bản ngẫu nhiên so với chuẩn đối chứng Ground Truth N = 100,000)*
@@ -146,7 +147,7 @@ flutter test
 ## 7. Tự động hóa CI/CD & DevOps
 
 Quy trình tích hợp và triển khai liên tục được thiết lập qua **GitHub Actions** (`.github/workflows/flutter_ci.yml`):
-* Tự động kích hoạt khi có sự kiện `push` hoặc `pull_request` trên nhánh `main`.
+* Tự động kích hoạt khi code được `push` hoặc `pull_request` trên nhánh `main`.
 * Thực hiện phân tích mã tĩnh nghiêm ngặt: `flutter analyze` (yêu cầu **0 errors, 0 warnings**).
 * Chạy toàn bộ 22 test cases: `flutter test --coverage`.
 * Lưu trữ và báo cáo độ bao phủ mã nguồn (Coverage Report Artifacts).
@@ -251,7 +252,6 @@ flutter run
 1. **Giai đoạn 1:** Tích hợp Bluetooth Low Energy (BLE) Smart Config cài đặt WiFi cho mạch ESP32 trực tiếp từ ứng dụng.
 2. **Giai đoạn 2:** Mở rộng cảm biến đo 7 chỉ số dinh dưỡng đất NPK (Đạm, Lân, Kali), độ dẫn điện EC và độ ẩm đa tầng rễ.
 3. **Giai đoạn 3:** Nhúng mô hình thị giác máy tính TensorFlow Lite (On-device ML) nhận diện sâu bệnh qua camera điện thoại.
-4. **Giai đoạn 4:** Điều khiển rơ-le 4–8 kênh tự động hóa van tưới nhỏ giọt và quạt thông gió dựa trên kết quả đầu ra của Động cơ AI Mờ.
 
 ---
 
