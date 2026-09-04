@@ -24,30 +24,110 @@
 9. [Hướng dẫn Cài đặt & Vận hành](#9-hướng-dẫn-cài-đặt--vận-hành)
 10. [Lộ trình Phát triển Tương lai](#10-lộ-trình-phát-triển-tương-lai)
 
----
+```mermaid
+flowchart TB
+    %% PHẦN CỨNG (IoT Hardware)
+    subgraph HW["1. Phần Cứng (IoT Hardware)"]
+        Sensors["Cảm biến (Độ ẩm, nhiệt độ, pH...)"] -->|Đo đạc| ESP32["Mạch ESP32"]
+        ESP32 -->|Điều khiển| Actuators["Máy bơm, đèn, rèm, quạt..."]
+    end
 
-## 1. Kiến trúc Hệ thống (System Architecture)
+    %% FIREBASE SERVICES
+    subgraph FB["2. Firebase Services"]
+        RTDB[("Realtime Database<br/>(Lưu trữ Data Sensor)")]
+        FirebaseAuth["Firebase Authentication<br/>(Quản lý User & Auth State)"]
+        Firestore[("Cloud Firestore<br/>(Lưu trữ Hồ sơ User & Farm)")]
+    end
 
-GreenPulse vận hành theo mô hình **Serverless Dual-Engine + Client Edge AI**:
+    %% ESP32 -> RTDB
+    ESP32 -->|"HTTP PATCH (Mỗi chu kỳ)"| RTDB
 
-```
- ┌──────────────────────┐         ┌───────────────────────────┐         ┌───────────────────────────┐
- │   Cảm biến / ESP32   │───────▶│  Firebase Realtime DB     │───────▶│    Flutter Mobile App     │
- │  (Nhiệt, Ẩm đất,     │  WiFi   │  (sensors/{uid}/{farmId}) │  Stream │  - Edge AI Mamdani N=200  │
- │   Ẩm khí, Ánh sáng,  │         └─────────────┬─────────────┘ WebSocket│  - Chuẩn hóa trọng số động│
- │   pH đất)            │                       │                       │  - Open-Meteo + Cache 15m │
- └──────────────────────┘                       │                       │  - Trợ năng Semantics A11y│
-                                                │ Trigger               └─────────────┬─────────────┘
-                                                ▼                                     │
-                                    ┌───────────────────────┐                         ▼
-                                    │ Firebase Cloud Func   │───────────────▶ Cloud Firestore
-                                    │ (Node.js Serverless)  │  FCM Tokens    (Farms, Users, Metadata)
-                                    └───────────┬───────────┘
-                                                │ Push 24/7
-                                                ▼
-                                    ┌───────────────────────┐
-                                    │ Google FCM / APNs     │───────────────▶ Màn hình khóa / Cảnh báo
-                                    └───────────────────────┘
+    %% CLOUD & FCM NOTIFICATION
+    subgraph CloudEngine["3. FCM & AI Engine"]
+        Mamdani["Logic mờ Mamdani"] --> CloudNotif["Xử lý Thông báo"]
+        CloudNotif --> PushNotif["Đẩy thông báo FCM lên điện thoại"]
+    end
+
+    %% VERCEL BACKEND & WEB ACTION HANDLER
+    subgraph Vercel["4. Vercel (Serverless Backend & Web Action Handler)"]
+        subgraph VercelBackend["Backend API (/api/auth)"]
+            AdminSDK["Firebase Admin SDK<br/>(Tạo mã bảo mật oobCode)"]
+            Mailer["Nodemailer (Google SMTP)<br/>(Tạo HTML Email GreenPulse)"]
+            AdminSDK & Mailer --> GenLink["Xử lý & Gửi Email Tự Động"]
+        end
+
+        subgraph VercelWeb["Web Action Handler (index.html)"]
+            WebVerify["Trang Xác Thực Email<br/>(auth.applyActionCode)"]
+            WebReset["Form Đặt Lại Mật Khẩu Mới<br/>(auth.confirmPasswordReset)"]
+        end
+    end
+
+    %% APP GREENPULSE (FLUTTER)
+    subgraph App["5. App GreenPulse (Flutter Client)"]
+        RTDBService["RTDB Service (Stream Listener qua WiFi)"]
+        AlertTask["Tác vụ cảnh báo<br/>(Dashboard / Alert / Notification)"]
+
+        subgraph AuthFlow["Quản Lý Xác Thực Tài Khoản"]
+            %% 1. Đăng ký
+            subgraph RegisterFlow["A. Đăng ký Tài khoản"]
+                RegisterUI["Màn hình Đăng ký"] -->|"1. createUserWithEmailAndPassword"| CreateAuth["Tạo tài khoản trên Firebase Auth"]
+                CreateAuth -->|"2. Ghi profile phụ (username, id...)"| SaveFirestore["Ghi dữ liệu vào Firestore"]
+                CreateAuth -->|"3. HTTP POST /send-verification-email"| CallVerifyAPI["Gửi Request lên Backend Vercel"]
+            end
+
+            %% 2. Chờ xác thực
+            subgraph VerifyFlow["B. Chờ & Quét Xác thực"]
+                VerifyUI["Màn hình verify_email_screen.dart"]
+                PollingCheck{"Tự động quét mỗi 3s<br/>(user.reload)"}
+                VerifyUI --> PollingCheck
+                PollingCheck -->|"Chưa xác thực"| PollingCheck
+                PollingCheck -->|"Đã xác thực (true)"| LaunchMain["Khởi chạy MainTabScreen<br/>(Dashboard Nông nghiệp)"]
+            end
+
+            %% 3. Đăng nhập
+            subgraph LoginFlow["C. Đăng nhập"]
+                LoginUI["Màn hình Đăng nhập"] --> CheckAuthStatus{"Kiểm tra emailVerified?"}
+                CheckAuthStatus -->|"Đã xác thực (true)"| LaunchMain
+                CheckAuthStatus -->|"Chưa (false)"| VerifyUI
+            end
+
+            %% 4. Quên mật khẩu
+            subgraph ResetFlow["D. Quên & Đặt lại Mật khẩu"]
+                ForgotDialog["Dialog Quên mật khẩu"] -->|"HTTP POST /send-password-reset-email"| CallResetAPI["Gửi Request lên Backend Vercel"]
+            end
+        end
+    end
+
+    %% KẾT NỐI LIÊN HỆ THỐNG
+    %% RTDB -> App & Cloud
+    RTDB -->|"Stream Data qua WiFi"| RTDBService
+    RTDBService --> Mamdani
+    CloudNotif --> AlertTask
+
+    %% App -> Firebase
+    CreateAuth -.-> FirebaseAuth
+    SaveFirestore -.-> Firestore
+    CheckAuthStatus -.->|"Truy vấn trạng thái"| FirebaseAuth
+    PollingCheck -.->|"user.reload()"| FirebaseAuth
+
+    %% App -> Vercel API
+    CallVerifyAPI -->|"HTTP POST"| VercelBackend
+    CallResetAPI -->|"HTTP POST"| VercelBackend
+
+    %% Vercel Backend -> Hộp thư
+    AdminSDK -.->|"Tra cứu tài khoản"| FirebaseAuth
+    GenLink -->|"Gửi email kích hoạt"| UserInboxVerify["📬 Hộp thư (Email Xác thực)"]
+    GenLink -->|"Gửi email đặt lại MK"| UserInboxReset["📬 Hộp thư (Email Đổi MK)"]
+
+    %% Người dùng bấm link -> Web Action Handler
+    UserInboxVerify -->|"Bấm nút 'Xác thực Email'"| WebVerify
+    UserInboxReset -->|"Bấm nút 'Đặt lại Mật khẩu'"| WebReset
+
+    %% Web Action Handler -> Firebase Auth & Deep link quay lại App
+    WebVerify -->|"applyActionCode(oobCode)"| FirebaseAuth
+    WebReset -->|"confirmPasswordReset(oobCode, newPassword)"| FirebaseAuth
+    WebVerify -.->|"Deep Link: greenpulse://open"| App
+    WebReset -.->|"Deep Link: greenpulse://open"| LoginUI
 ```
 
 ### Chi tiết các tầng công nghệ:
