@@ -2,13 +2,13 @@
   "crops": [
     {
       "crop_id": "robusta_coffee",
-      "crop_name": "Cà phê vối (Coffea canephora)[cite: 1]",
+      "crop_name": "Cà phê vối",
       "soil_ph_min": 4.5,
       "soil_ph_max": 6.0,
       "growth_stages": [
         {
           "stage_id": 1,
-          "stage_name": "A. Sinh trưởng[cite: 1]",
+          "stage_name": "A. Sinh trưởng",
           "temp_min": 20,
           "temp_max": 30,
           "soil_moisture_min": 30,
@@ -17,11 +17,11 @@
           "air_humidity_max": 90,
           "lux_min": null,
           "lux_max": null,
-          "notes": "Hiệu chuẩn theo đất; không dùng % chung[cite: 1]. Theo nghiên cứu Ferralsol Đắk Lắk, 30 vol.% là mốc bắt đầu tưới[cite: 1]. Thiết kế che bóng mỏng, đều; tránh bức xạ trực xạ quá mạnh kéo dài[cite: 1]."
+          "notes": "Hiệu chuẩn theo đất; không dùng % chung. Theo nghiên cứu Ferralsol Đắk Lắk, 30 vol.% là mốc bắt đầu tưới. Thiết kế che bóng mỏng, đều; tránh bức xạ trực xạ quá mạnh kéo dài."
         },
         {
           "stage_id": 2,
-          "stage_name": "B. Ra hoa - đậu quả[cite: 1]",
+          "stage_name": "B. Ra hoa - đậu quả",
           "temp_min": 20,
           "temp_max": 30,
           "soil_moisture_min": 30,
@@ -30,11 +30,11 @@
           "air_humidity_max": 90,
           "lux_min": null,
           "lux_max": null,
-          "notes": "Ưu tiên logic nước: sau giai đoạn khô tạo mầm, không để vùng rễ tụt dưới mốc đã hiệu chuẩn (nghiên cứu Đắk Lắk dùng 30 vol.% làm ngưỡng tưới)[cite: 1]. Không coi lux là ngưỡng sinh học tuyệt đối; ưu tiên theo cấu hình vườn/che bóng[cite: 1]."
+          "notes": "Ưu tiên logic nước: sau giai đoạn khô tạo mầm, không để vùng rễ tụt dưới mốc đã hiệu chuẩn (nghiên cứu Đắk Lắk dùng 30 vol.% làm ngưỡng tưới). Không coi lux là ngưỡng sinh học tuyệt đối; ưu tiên theo cấu hình vườn/che bóng."
         },
         {
           "stage_id": 3,
-          "stage_name": "C. Quả phát triển - chín[cite: 1]",
+          "stage_name": "C. Quả phát triển - chín",
           "temp_min": 20,
           "temp_max": 30,
           "soil_moisture_min": null,
@@ -43,19 +43,19 @@
           "air_humidity_max": 90,
           "lux_min": null,
           "lux_max": null,
-          "notes": "Duy trì nước theo đặc tính đất và tải quả; tiếp tục dùng ngưỡng hiệu chuẩn thực địa[cite: 1]. Theo dõi ánh sáng và nhiệt độ cùng độ ẩm đất[cite: 1]."
+          "notes": "Duy trì nước theo đặc tính đất và tải quả; tiếp tục dùng ngưỡng hiệu chuẩn thực địa. Theo dõi ánh sáng và nhiệt độ cùng độ ẩm đất."
         }
       ]
     },
     {
       "crop_id": "black_pepper",
-      "crop_name": "Hồ tiêu (Piper nigrum)[cite: 1]",
+      "crop_name": "Hồ tiêu",
       "soil_ph_min": 5.0,
       "soil_ph_max": 7.0,
       "growth_stages": [
         {
           "stage_id": 1,
-          "stage_name": "A. Sinh trưởng[cite: 1]",
+          "stage_name": "A. Sinh trưởng",
           "temp_min": 23,
           "temp_max": 32,
           "soil_moisture_min": 28,
@@ -64,11 +64,11 @@
           "air_humidity_max": 95,
           "lux_min": null,
           "lux_max": null,
-          "notes": "Thí nghiệm VAAS: 28–30% độ ẩm đất; tốt nhất chuẩn hóa theo FC/soil water potential[cite: 1]. Ưu tiên che sáng vừa phải; điều chỉnh theo thực tế vườn[cite: 1]."
+          "notes": "Thí nghiệm VAAS: 28–30% độ ẩm đất; tốt nhất chuẩn hóa theo FC/soil water potential. Ưu tiên che sáng vừa phải; điều chỉnh theo thực tế vườn."
         },
         {
           "stage_id": 2,
-          "stage_name": "B. Ra hoa - đậu quả[cite: 1]",
+          "stage_name": "B. Ra hoa - đậu quả",
           "temp_min": 23,
           "temp_max": 32,
           "soil_moisture_min": null,
@@ -77,11 +77,11 @@
           "air_humidity_max": 95,
           "lux_min": null,
           "lux_max": null,
-          "notes": "Cần đủ nước; tránh khô hạn trong giai đoạn ra hoa–chín[cite: 1]. Dùng ngưỡng đã hiệu chuẩn, không bơm theo lux hay RH đơn lẻ[cite: 1]. Khoảng 30% che sáng thúc đẩy phát hoa; 60% che sáng ức chế mạnh[cite: 1]."
+          "notes": "Cần đủ nước; tránh khô hạn trong giai đoạn ra hoa–chín. Dùng ngưỡng đã hiệu chuẩn, không bơm theo lux hay RH đơn lẻ. Khoảng 30% che sáng thúc đẩy phát hoa; 60% che sáng ức chế mạnh."
         },
         {
           "stage_id": 3,
-          "stage_name": "C. Quả phát triển - chín[cite: 1]",
+          "stage_name": "C. Quả phát triển - chín",
           "temp_min": 23,
           "temp_max": 32,
           "soil_moisture_min": null,
@@ -90,19 +90,19 @@
           "air_humidity_max": 95,
           "lux_min": null,
           "lux_max": null,
-          "notes": "Duy trì ẩm ổn định; có thể quản lý bằng tensiometer/FC tùy đất[cite: 1]. Giữ bóng phù hợp, tránh che quá mức[cite: 1]."
+          "notes": "Duy trì ẩm ổn định; có thể quản lý bằng tensiometer/FC tùy đất. Giữ bóng phù hợp, tránh che quá mức."
         }
       ]
     },
     {
       "crop_id": "cashew",
-      "crop_name": "Điều (Anacardium occidentale)[cite: 1]",
+      "crop_name": "Điều",
       "soil_ph_min": 4.5,
       "soil_ph_max": 6.5,
       "growth_stages": [
         {
           "stage_id": 1,
-          "stage_name": "A. Sinh trưởng[cite: 1]",
+          "stage_name": "A. Sinh trưởng",
           "temp_min": 25,
           "temp_max": 35,
           "soil_moisture_min": null,
@@ -111,11 +111,11 @@
           "air_humidity_max": null,
           "lux_min": null,
           "lux_max": null,
-          "notes": "Ưu tiên well-drained; nếu có tưới, quyết định theo FC/tension của đất[cite: 1]. Nhu cầu ánh sáng cao; EcoCrop mô tả “very bright”[cite: 1]."
+          "notes": "Ưu tiên well-drained; nếu có tưới, quyết định theo FC/tension của đất. Nhu cầu ánh sáng cao; EcoCrop mô tả “very bright”."
         },
         {
           "stage_id": 2,
-          "stage_name": "B. Ra hoa - đậu quả[cite: 1]",
+          "stage_name": "B. Ra hoa - đậu quả",
           "temp_min": 25,
           "temp_max": 35,
           "soil_moisture_min": null,
@@ -124,11 +124,11 @@
           "air_humidity_max": null,
           "lux_min": null,
           "lux_max": null,
-          "notes": "Nước có thể có lợi từ ra hoa đến đầu thu hoạch; tránh thiếu kéo dài[cite: 1]. Giữ điều kiện sáng cao; tránh thiếu sáng kéo dài[cite: 1]."
+          "notes": "Nước có thể có lợi từ ra hoa đến đầu thu hoạch; tránh thiếu kéo dài. Giữ điều kiện sáng cao; tránh thiếu sáng kéo dài."
         },
         {
           "stage_id": 3,
-          "stage_name": "C. Quả phát triển - chín[cite: 1]",
+          "stage_name": "C. Quả phát triển - chín",
           "temp_min": 25,
           "temp_max": 35,
           "soil_moisture_min": null,
@@ -137,19 +137,19 @@
           "air_humidity_max": null,
           "lux_min": null,
           "lux_max": null,
-          "notes": "Tiếp tục quản lý theo đặc tính đất; nghiên cứu tưới dùng 80 kPa làm mốc bắt đầu tưới ở hệ nghiên cứu[cite: 1]. Ưu tiên ánh sáng cao và ổn định[cite: 1]."
+          "notes": "Tiếp tục quản lý theo đặc tính đất; nghiên cứu tưới dùng 80 kPa làm mốc bắt đầu tưới ở hệ nghiên cứu. Ưu tiên ánh sáng cao và ổn định."
         }
       ]
     },
     {
       "crop_id": "durian",
-      "crop_name": "Sầu riêng (Durio zibethinus)[cite: 1]",
+      "crop_name": "Sầu riêng",
       "soil_ph_min": 5.5,
       "soil_ph_max": 6.5,
       "growth_stages": [
         {
           "stage_id": 1,
-          "stage_name": "A. Sinh trưởng[cite: 1]",
+          "stage_name": "A. Sinh trưởng",
           "temp_min": 24,
           "temp_max": 30,
           "soil_moisture_min": null,
@@ -158,11 +158,11 @@
           "air_humidity_max": 90,
           "lux_min": null,
           "lux_max": null,
-          "notes": "Giữ ẩm ổn định nhưng thoát nước tốt; tuyệt đối tránh úng kéo dài[cite: 1]. Có thể dùng PPFD/shade trong nghiên cứu; không áp một ngưỡng lux chung[cite: 1]."
+          "notes": "Giữ ẩm ổn định nhưng thoát nước tốt; tuyệt đối tránh úng kéo dài. Có thể dùng PPFD/shade trong nghiên cứu; không áp một ngưỡng lux chung."
         },
         {
           "stage_id": 2,
-          "stage_name": "B. Tạo mầm - ra hoa[cite: 1]",
+          "stage_name": "B. Tạo mầm - ra hoa",
           "temp_min": 24,
           "temp_max": 30,
           "soil_moisture_min": null,
@@ -171,11 +171,11 @@
           "air_humidity_max": 90,
           "lux_min": null,
           "lux_max": null,
-          "notes": "Nếu áp dụng quy trình xử lý ra hoa trái vụ: xiết nước có kiểm soát; sau khi nụ đạt 0,3–0,5 cm thì tưới tăng dần[cite: 1]. Quy trình VN có bước điều chỉnh pH 5,8–6,8 sau thu hoạch[cite: 1]. Không dùng “ánh sáng quá cao” để tự động rèm nếu chưa hiệu chuẩn theo nhà kính[cite: 1]."
+          "notes": "Nếu áp dụng quy trình xử lý ra hoa trái vụ: siết nước có kiểm soát; sau khi nụ đạt 0,3–0,5 cm thì tưới tăng dần. Quy trình VN có bước điều chỉnh pH 5,8–6,8 sau thu hoạch. Không dùng “ánh sáng quá cao” để tự động rèm nếu chưa hiệu chuẩn theo nhà kính."
         },
         {
           "stage_id": 3,
-          "stage_name": "C. Đậu quả - phát triển quả[cite: 1]",
+          "stage_name": "C. Đậu quả - phát triển quả",
           "temp_min": 24,
           "temp_max": 30,
           "soil_moisture_min": null,
@@ -184,7 +184,7 @@
           "air_humidity_max": 90,
           "lux_min": null,
           "lux_max": null,
-          "notes": "Tránh cả hạn và úng[cite: 1]. Nghiên cứu 2026 cho thấy VWC <0,19 m³/m³ gắn với triệu chứng hạn trên Monthong, không dùng đây như “độ ẩm tối ưu”[cite: 1]. Nghiên cứu quang hợp cho thấy đáp ứng phụ thuộc PPFD và mức che[cite: 1]."
+          "notes": "Tránh cả hạn và úng. Nghiên cứu 2026 cho thấy VWC <0,19 m³/m³ gắn với triệu chứng hạn trên Monthong, không dùng đây như “độ ẩm tối ưu”. Nghiên cứu quang hợp cho thấy đáp ứng phụ thuộc PPFD và mức che."
         }
       ]
     }

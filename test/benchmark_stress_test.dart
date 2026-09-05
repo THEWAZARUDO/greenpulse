@@ -52,13 +52,13 @@ void main() {
     final avgLatencyUs = (elapsedMicro / iterations).toStringAsFixed(2);
 
     print('\n===============================================================');
-    print('⚡ GREENPULSE STRESS TEST / BENCHMARK RESULTS:');
-    print('  • Tổng số lần đánh giá: $iterations phép suy diễn');
-    print('  • Thời gian thực thi: $elapsedMs ms');
+    print('GREENPULSE STRESS TEST / BENCHMARK RESULTS:');
+    print(' - Tổng số lần đánh giá: $iterations phép suy diễn');
+    print(' - Thời gian thực thi: $elapsedMs ms');
 
-    print('  • Tốc độ xử lý (Throughput): $opsPerSec phép tính/giây');
-    print('  • Độ trễ trung bình mỗi lần: $avgLatencyUs µs (microsecond)');
-    print('  • Phân bổ: Normal=$normalCount, Warning=$warningCount, Danger=$dangerCount');
+    print(' - Tốc độ xử lý (Throughput): $opsPerSec phép tính/giây');
+    print(' - Độ trễ trung bình mỗi lần: $avgLatencyUs µs (microsecond)');
+    print(' - Phân bổ: Normal=$normalCount, Warning=$warningCount, Danger=$dangerCount');
     print('===============================================================\n');
 
     expect(iterations, equals(20000));
