@@ -53,22 +53,20 @@ class DashboardHeader extends StatelessWidget {
                     children: [
                       // Avatar icon
                       Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
+                        width: 42,
+                        height: 42,
+                        decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.4),
-                            width: 1.5,
-                          ),
+                          color: Colors.white,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.15),
+                              color: Colors.black26,
                               blurRadius: 6,
-                              offset: const Offset(0, 2),
+                              offset: Offset(0, 2),
                             ),
                           ],
                         ),
+                        padding: const EdgeInsets.all(2),
                         child: ClipOval(
                           child: Image.asset(
                             'assets/images/app_logo.png',

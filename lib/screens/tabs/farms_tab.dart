@@ -30,11 +30,25 @@ class FarmsTab extends StatelessWidget {
       backgroundColor: const Color(0xFFF0F7F0),
       appBar: AppBar(
         leading: Padding(
-          padding: const EdgeInsets.only(left: 16, top: 10, bottom: 10, right: 2),
-          child: ClipOval(
-            child: Image.asset(
-              'assets/images/app_logo.png',
-              fit: BoxFit.cover,
+          padding: const EdgeInsets.only(left: 14, top: 8, bottom: 8, right: 4),
+          child: Container(
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 4,
+                  offset: Offset(0, 1.5),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(2),
+            child: ClipOval(
+              child: Image.asset(
+                'assets/images/app_logo.png',
+                fit: BoxFit.cover,
+              ),
             ),
           ),
         ),

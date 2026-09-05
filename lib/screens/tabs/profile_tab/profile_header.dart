@@ -138,12 +138,19 @@ class ProfileHeader extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      ClipOval(
-                        child: Image.asset(
-                          'assets/images/app_logo.png',
-                          width: 15,
-                          height: 15,
-                          fit: BoxFit.cover,
+                      Container(
+                        padding: const EdgeInsets.all(1.5),
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                        ),
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/images/app_logo.png',
+                            width: 16,
+                            height: 16,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 6),
