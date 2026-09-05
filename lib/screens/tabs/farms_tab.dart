@@ -29,6 +29,15 @@ class FarmsTab extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF0F7F0),
       appBar: AppBar(
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 16, top: 10, bottom: 10, right: 2),
+          child: ClipOval(
+            child: Image.asset(
+              'assets/images/app_logo.png',
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
         title: const Text(
           'Quản lý Nông trại',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),

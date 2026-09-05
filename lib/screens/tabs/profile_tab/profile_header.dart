@@ -135,12 +135,19 @@ class ProfileHeader extends StatelessWidget {
                       color: Colors.white.withValues(alpha: 0.3),
                     ),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.eco, size: 13, color: Colors.white),
-                      SizedBox(width: 5),
-                      Text(
+                      ClipOval(
+                        child: Image.asset(
+                          'assets/images/app_logo.png',
+                          width: 15,
+                          height: 15,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      const Text(
                         'Nông hộ GreenPulse',
                         style: TextStyle(
                           color: Colors.white,
