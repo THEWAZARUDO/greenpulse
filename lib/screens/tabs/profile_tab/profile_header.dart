@@ -139,10 +139,12 @@ class ProfileHeader extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(1.5),
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white,
+                          border: Border.all(
+                            color: Colors.white,
+                            width: 1.0,
+                          ),
                         ),
                         child: ClipOval(
                           child: Image.asset(

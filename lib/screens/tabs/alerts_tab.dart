@@ -26,12 +26,15 @@ class AlertsTab extends StatelessWidget {
       backgroundColor: const Color(0xFFF0F7F0),
       appBar: AppBar(
         leading: Padding(
-          padding: const EdgeInsets.only(left: 14, top: 8, bottom: 8, right: 4),
+          padding: const EdgeInsets.only(left: 14, top: 9, bottom: 9, right: 4),
           child: Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white,
-              boxShadow: [
+              border: Border.all(
+                color: Colors.white,
+                width: 1.0,
+              ),
+              boxShadow: const [
                 BoxShadow(
                   color: Colors.black26,
                   blurRadius: 4,
@@ -39,7 +42,6 @@ class AlertsTab extends StatelessWidget {
                 ),
               ],
             ),
-            padding: const EdgeInsets.all(2),
             child: ClipOval(
               child: Image.asset(
                 'assets/images/app_logo.png',
