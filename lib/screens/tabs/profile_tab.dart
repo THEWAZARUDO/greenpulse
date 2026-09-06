@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../../models/user_model.dart';
 import '../../services/firestore_service.dart';
 import '../../services/notification_service.dart';
@@ -18,6 +19,17 @@ export 'profile_tab/profile_dialogs.dart';
 
 class ProfileTab extends StatelessWidget {
   const ProfileTab({super.key});
+
+  static Future<String> _loadVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      return info.version.isNotEmpty ? 'v${info.version}' : 'v1.1.1';
+    } catch (_) {
+      return 'v1.1.1';
+    }
+  }
+
+  static final Future<String> _versionFuture = _loadVersion();
 
   @override
   Widget build(BuildContext context) {
@@ -188,19 +200,24 @@ class ProfileTab extends StatelessWidget {
                       const SizedBox(height: 14),
 
                       // App info card
-                      const SectionCard(
+                      SectionCard(
                         title: 'Về ứng dụng',
                         icon: Icons.info_outline,
                         children: [
                           SettingsTile(
                             icon: Icons.verified_outlined,
                             label: 'Phiên bản',
-                            trailing: Text(
-                              'v1.0.0',
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 13,
-                              ),
+                            trailing: FutureBuilder<String>(
+                              future: _versionFuture,
+                              builder: (context, snapshot) {
+                                return Text(
+                                  snapshot.data ?? 'v1.1.1',
+                                  style: const TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 13,
+                                  ),
+                                );
+                              },
                             ),
                           ),
                         ],
