@@ -8,7 +8,7 @@
       "growth_stages": [
         {
           "stage_id": 1,
-          "stage_name": "A. Sinh trưởng",
+          "stage_name": "Sinh trưởng",
           "temp_min": 20,
           "temp_max": 30,
           "soil_moisture_min": 30,
@@ -21,7 +21,7 @@
         },
         {
           "stage_id": 2,
-          "stage_name": "B. Ra hoa - đậu quả",
+          "stage_name": "Ra hoa - đậu quả",
           "temp_min": 20,
           "temp_max": 30,
           "soil_moisture_min": 30,
@@ -34,7 +34,7 @@
         },
         {
           "stage_id": 3,
-          "stage_name": "C. Quả phát triển - chín",
+          "stage_name": "Quả phát triển - chín",
           "temp_min": 20,
           "temp_max": 30,
           "soil_moisture_min": null,
@@ -55,7 +55,7 @@
       "growth_stages": [
         {
           "stage_id": 1,
-          "stage_name": "A. Sinh trưởng",
+          "stage_name": "Sinh trưởng",
           "temp_min": 23,
           "temp_max": 32,
           "soil_moisture_min": 28,
@@ -68,7 +68,7 @@
         },
         {
           "stage_id": 2,
-          "stage_name": "B. Ra hoa - đậu quả",
+          "stage_name": "Ra hoa - đậu quả",
           "temp_min": 23,
           "temp_max": 32,
           "soil_moisture_min": null,
@@ -81,7 +81,7 @@
         },
         {
           "stage_id": 3,
-          "stage_name": "C. Quả phát triển - chín",
+          "stage_name": "Quả phát triển - chín",
           "temp_min": 23,
           "temp_max": 32,
           "soil_moisture_min": null,
@@ -102,7 +102,7 @@
       "growth_stages": [
         {
           "stage_id": 1,
-          "stage_name": "A. Sinh trưởng",
+          "stage_name": "Sinh trưởng",
           "temp_min": 25,
           "temp_max": 35,
           "soil_moisture_min": null,
@@ -115,7 +115,7 @@
         },
         {
           "stage_id": 2,
-          "stage_name": "B. Ra hoa - đậu quả",
+          "stage_name": "Ra hoa - đậu quả",
           "temp_min": 25,
           "temp_max": 35,
           "soil_moisture_min": null,
@@ -128,7 +128,7 @@
         },
         {
           "stage_id": 3,
-          "stage_name": "C. Quả phát triển - chín",
+          "stage_name": "Quả phát triển - chín",
           "temp_min": 25,
           "temp_max": 35,
           "soil_moisture_min": null,
@@ -149,7 +149,7 @@
       "growth_stages": [
         {
           "stage_id": 1,
-          "stage_name": "A. Sinh trưởng",
+          "stage_name": "Sinh trưởng",
           "temp_min": 24,
           "temp_max": 30,
           "soil_moisture_min": null,
@@ -162,7 +162,7 @@
         },
         {
           "stage_id": 2,
-          "stage_name": "B. Tạo mầm - ra hoa",
+          "stage_name": "Tạo mầm - ra hoa",
           "temp_min": 24,
           "temp_max": 30,
           "soil_moisture_min": null,
@@ -175,7 +175,7 @@
         },
         {
           "stage_id": 3,
-          "stage_name": "C. Đậu quả - phát triển quả",
+          "stage_name": "Đậu quả - phát triển quả",
           "temp_min": 24,
           "temp_max": 30,
           "soil_moisture_min": null,
