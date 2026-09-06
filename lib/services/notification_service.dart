@@ -34,7 +34,6 @@ class NotificationService {
   static const String channelDescription =
       'Kênh thông báo cảnh báo thông số nhiệt độ, độ ẩm và môi trường nông nghiệp';
 
-  /// Tần suất thông báo cảnh báo (1 đến 10 phút)
   int get alertFrequencyMinutes => _alertFrequencyMinutes;
 
   void setAlertFrequencyMinutes(int minutes) {
@@ -251,8 +250,8 @@ class NotificationService {
     _lastGlobalNotificationTime = now;
 
     final iconHeader = sensor.overallStatus == StatusLevel.danger
-        ? '🚨 [NGUY HIỂM]'
-        : '⚠️ [CẢNH BÁO]';
+        ? '[NGUY HIỂM]'
+        : '[CẢNH BÁO]';
     final advice = sensor.adviceList.isNotEmpty
         ? sensor.adviceList.first
         : 'Vui lòng kiểm tra trang trại ngay!';
