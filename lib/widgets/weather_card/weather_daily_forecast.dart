@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/weather_model.dart';
+import '../../presets/presets.dart';
 
 class WeatherDailyForecast extends StatefulWidget {
   final List<DailyForecast> daily;
@@ -89,10 +90,12 @@ class _WeatherDailyForecastState extends State<WeatherDailyForecast> {
             ),
           ),
         ),
-        if (_is7DaysExpanded)
-          Padding(
+        AppAnimatedExpand(
+          isExpanded: _is7DaysExpanded,
+          child: Padding(
             padding: const EdgeInsets.fromLTRB(14, 4, 14, 12),
-            child: Column(
+            child: AppStaggeredList(
+              staggerDelay: const Duration(milliseconds: 35),
               children: widget.daily.asMap().entries.map((e) {
                 final index = e.key;
                 final d = e.value;
@@ -158,9 +161,9 @@ class _WeatherDailyForecastState extends State<WeatherDailyForecast> {
                 );
               }).toList(),
             ),
-          )
-        else
-          const SizedBox(height: 6),
+          ),
+        ),
+        if (!_is7DaysExpanded) const SizedBox(height: 6),
       ],
     );
   }

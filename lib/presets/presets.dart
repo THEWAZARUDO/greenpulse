@@ -11,3 +11,4 @@ export 'app_spacing.dart';
 export 'app_theme.dart';
 export 'app_responsive.dart';
 export 'app_accessibility.dart';
+export 'app_animations.dart';

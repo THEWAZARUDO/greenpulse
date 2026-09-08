@@ -9,6 +9,7 @@ import 'tabs/dashboard_tab.dart';
 import 'tabs/farms_tab.dart';
 import 'tabs/alerts_tab.dart';
 import 'tabs/profile_tab.dart';
+import '../presets/presets.dart';
 
 class MainTabScreen extends StatefulWidget {
   const MainTabScreen({super.key});
@@ -194,9 +195,12 @@ class _MainTabScreenState extends State<MainTabScreen> {
               ),
             ),
 
-          // ── Main Tab View ──────────────────────────────────────────────────
+          // ── Main Tab View (Chuyển tab mượt mà với AppTabTransition) ─────────
           Expanded(
-            child: IndexedStack(index: _currentIndex, children: _tabs),
+            child: AppTabTransition(
+              currentTab: _currentIndex,
+              child: _tabs[_currentIndex],
+            ),
           ),
         ],
       ),

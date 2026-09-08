@@ -127,4 +127,116 @@ void main() {
       );
     });
   });
+
+  group('AppAnimations Tests', () {
+    test('Hằng số Animation Durations chuẩn xác', () {
+      expect(AppAnimations.fast, equals(const Duration(milliseconds: 200)));
+      expect(AppAnimations.normal, equals(const Duration(milliseconds: 300)));
+      expect(AppAnimations.slow, equals(const Duration(milliseconds: 500)));
+      expect(AppAnimations.staggerDelay, equals(const Duration(milliseconds: 60)));
+      expect(AppAnimations.tabTransition, equals(const Duration(milliseconds: 280)));
+    });
+
+    testWidgets('AppStaggeredList hiển thị đầy đủ các widget con', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: AppStaggeredList(
+              children: [
+                Text('Mục 1'),
+                Text('Mục 2'),
+                Text('Mục 3'),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // Ban đầu đã được mount vào widget tree
+      expect(find.text('Mục 1'), findsOneWidget);
+      expect(find.text('Mục 2'), findsOneWidget);
+      expect(find.text('Mục 3'), findsOneWidget);
+
+      // Cho phép tất cả controller chạy hết animation
+      await tester.pumpAndSettle();
+      expect(find.text('Mục 1'), findsOneWidget);
+    });
+
+    testWidgets('AppAnimatedExpand mở rộng và thu gọn nội dung', (tester) async {
+      bool isExpanded = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) {
+                return Column(
+                  children: [
+                    ElevatedButton(
+                      onPressed: () => setState(() => isExpanded = !isExpanded),
+                      child: const Text('Toggle'),
+                    ),
+                    AppAnimatedExpand(
+                      isExpanded: isExpanded,
+                      child: const Text('Nội dung xổ ra'),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      // Ban đầu ở trạng thái đóng
+      expect(find.text('Nội dung xổ ra'), findsOneWidget);
+
+      // Bấm mở rộng
+      await tester.tap(find.text('Toggle'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Nội dung xổ ra'), findsOneWidget);
+    });
+
+    testWidgets('AppTabTransition chuyển đổi tab mượt mà', (tester) async {
+      int activeTab = 0;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) {
+                return Column(
+                  children: [
+                    ElevatedButton(
+                      onPressed: () => setState(() => activeTab = 1),
+                      child: const Text('Switch Tab'),
+                    ),
+                    Expanded(
+                      child: AppTabTransition(
+                        currentTab: activeTab,
+                        child: activeTab == 0
+                            ? const Text('Dashboard Screen')
+                            : const Text('Farms Screen'),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Dashboard Screen'), findsOneWidget);
+      expect(find.text('Farms Screen'), findsNothing);
+
+      // Chuyển sang Tab 1
+      await tester.tap(find.text('Switch Tab'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Farms Screen'), findsOneWidget);
+    });
+  });
 }
+
