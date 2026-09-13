@@ -4,8 +4,6 @@
 [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart)](https://dart.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-RTDB%20%7C%20Firestore%20%7C%20App%20Check-FFCA28?logo=firebase)](https://firebase.google.com)
 [![Open-Meteo](https://img.shields.io/badge/Weather-Open--Meteo%20API-00B0FF)](https://open-meteo.com)
-[![CI/CD](https://github.com/THEWAZARUDO/greenpulse/actions/workflows/flutter_ci.yml/badge.svg)](https://github.com/THEWAZARUDO/greenpulse/actions)
-[![Tests](https://img.shields.io/badge/Tests-22%2F22%20Passed%20(100%25)-brightgreen)](test/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 > Hệ thống giám sát và cố vấn nông nghiệp thông minh đa nền tảng (Android / iOS / IoT 24/7) chuyên biệt cho cây công nghiệp và cây ăn trái giá trị cao (Sầu riêng Musang King, Cà phê Robusta tại Ea Kar, Đắk Lắk và khu vực Tây Nguyên). Kết hợp **Động cơ Trí tuệ Nhân tạo Biên (Edge AI Mamdani Fuzzy Logic N=200)**, **Dự báo Khí tượng Nông học Toàn cầu (Open-Meteo)**, và **Hạ tầng Đám mây Không Máy chủ (Serverless Dual-Engine)**.
@@ -21,9 +19,9 @@
 6. [Hệ thống Kiểm thử Toàn diện (Testing Suite — 22 Tests Passing)](#6-hệ-thống-kiểm-thử-toàn-diện-testing-suite--22-tests-passing)
 7. [Tự động hóa CI/CD & DevOps](#7-tự-động-hóa-cicd--devops)
 8. [Cấu trúc Thư mục Dự án](#8-cấu-trúc-thư-mục-dự-án)
-9. [Hướng dẫn Cài đặt & Vận hành](#9-hướng-dẫn-cài-đặt--vận-hành)
-10. [Lộ trình Phát triển Tương lai](#10-lộ-trình-phát-triển-tương-lai)
+9. [Lộ trình Phát triển Tương lai](#9-lộ-trình-phát-triển-tương-lai)
 
+## 1. Kiến trúc tổng quát của hệ thống.
 ```mermaid
 flowchart TB
     %% PHẦN CỨNG (IoT Hardware)
@@ -142,7 +140,7 @@ flowchart TB
 
 ---
 
-## 2. Động cơ AI Mờ Mamdani & Nghiên cứu Thực nghiệm N=200
+## 2. Logic AI
 
 Động cơ suy diễn mờ (`lib/models/fuzzy_logic_engine.dart`) chịu trách nhiệm đánh giá mức độ rủi ro sức khỏe cây trồng dựa trên 5 chỉ số vi khí hậu và thổ nhưỡng.
 
@@ -164,11 +162,11 @@ ightarrow 100$.
 
 | Số điểm (N) | $\Delta z$ | Sai số TB | Sai số Cực đại | Tốc độ xử lý | Đánh giá Kỹ thuật & Nông học |
 | :---: | :---: | :---: | :---: | :---: | :--- |
-| **N = 10** | 11.111 điểm | 1.94611 điểm | 4.22769 điểm | ~85,000 ops/s |  Sai số lớn (> 4 điểm), dễ nhảy sai phân cấp cảnh báo. |
-| **N = 50** | 2.040 điểm | 0.33968 điểm | 0.67938 điểm | 62,305 ops/s |  Tương đối tốt nhưng biên tích phân còn thô. |
-| **N = 100** | 1.010 điểm | 0.16753 điểm | 0.31228 điểm | 45,455 ops/s |  Chuẩn cho các ứng dụng cơ bản. |
-| **N = 200 (GreenPulse)** | **0.502 điểm** | **0.19883 điểm** | **0.37847 điểm** | **26,918 ops/s** |  **Điểm cân bằng Pareto tối ưu**: Độ chính xác 99.80%, độ trễ 37.16 µs, không giật lag. |
-| **N = 300** | 0.334 điểm | 0.05546 điểm | 0.10005 điểm | 20,305 ops/s |  Rất mịn, tăng thêm khối lượng tính toán CPU. |
+| **N = 10** | 11.111 điểm | 1.94611 điểm | 4.22769 điểm | ~85,000 ops/s |  Sai số quá lớn. |
+| **N = 50** | 2.040 điểm | 0.33968 điểm | 0.67938 điểm | 62,305 ops/s |  Tương đối tốt nhưng còn thô. |
+| **N = 100** | 1.010 điểm | 0.16753 điểm | 0.31228 điểm | 45,455 ops/s |  Chuẩn cho các ứng dụng cơ bản, nhưng chưa đủ chính xác với cây trồng. |
+| **N = 200 (được chọn)** | **0.502 điểm** | **0.19883 điểm** | **0.37847 điểm** | **26,918 ops/s** | Độ chính xác 99.80%, độ trễ 37.16 µs, không giật lag. |
+| **N = 300** | 0.334 điểm | 0.05546 điểm | 0.10005 điểm | 20,305 ops/s |  Rất mịn, nhưng tăng thêm khối lượng tính toán CPU. |
 | **N = 500** | 0.200 điểm | 0.03323 điểm | 0.05996 điểm | 13,324 ops/s |  Độ chính xác cao quá mức cần thiết, gây hao pin thiết bị. |
 
 ---
@@ -182,19 +180,19 @@ ightarrow 100$.
 
 ---
 
-## 4. Bảo mật, Phân quyền & Quản lý Secret
+## 4. Security.
 
-1. **Xác thực định danh (Authentication):** Quản lý qua Firebase Auth với luồng Verify Email bắt buộc (`user.emailVerified`) trước khi cấp quyền truy cập hệ thống.
-2. **Phân quyền dữ liệu (Authorization):** Path-based Security Rules gắn chặt với `auth.uid`. Người dùng chỉ có quyền đọc/ghi dữ liệu nông trại thuộc sở hữu của mình (`request.auth.uid == uid`).
+1. **Authentication:** Quản lý qua Firebase Auth với luồng Verify Email bắt buộc (`user.emailVerified`) trước khi cấp quyền truy cập hệ thống.
+2. **Authorization:** Người dùng chỉ có quyền đọc/ghi dữ liệu nông trại thuộc sở hữu của mình (`request.auth.uid == uid`).
 3. **Bảo vệ ứng dụng (Firebase App Check):** Tích hợp `firebase_app_check` với Debug Provider (Môi trường Dev/Test) và Google Play Integrity / Apple DeviceCheck (Môi trường Production) ngăn chặn triệt để bot và API scraping.
 4. **Kiểm toán Secret:** Không hardcode bất kỳ Private Key hay Master Secret nào trong client app.
-5. **Kiểm tra dữ liệu đầu vào (Input Validation):**
+5. **Input Validation:**
    * Form UI: Regex RFC kiểm tra email, mật khẩu >= 6 ký tự.
    * Model Parser: Hàm `SensorData.tryParseDouble` xử lý an toàn chuỗi số có khoảng trắng, số kiểu Châu Âu dùng dấu phẩy, và lọc bỏ dữ liệu rác.
 
 ---
 
-## 5. Cơ chế Chịu lỗi, Mạng Chập chờn & Fallback Đa tầng
+## 5. Cơ chế Fallback
 
 * **Long-lived WebSocket:** Kết nối hai chiều liên tục với Firebase RTDB, tự động kết nối lại (Auto-reconnect) với thuật toán Exponential Backoff.
 * **Offline Persistence:** `keepSynced(true)` duy trì bộ đệm SQLite trên ổ đĩa thiết bị.
@@ -203,9 +201,7 @@ ightarrow 100$.
 
 ---
 
-## 6. Hệ thống Kiểm thử Toàn diện (Testing Suite — 22 Tests Passing)
-
-Hệ thống sở hữu bộ 22 kịch bản kiểm thử tự động đạt **100% Pass** trên 6 file test:
+## 6. Testing
 
 ```
 test/
@@ -232,102 +228,7 @@ Quy trình tích hợp và triển khai liên tục được thiết lập qua *
 * Chạy toàn bộ 22 test cases: `flutter test --coverage`.
 * Lưu trữ và báo cáo độ bao phủ mã nguồn (Coverage Report Artifacts).
 
----
-
-## 8. Cấu trúc Thư mục Dự án
-
-```
-greenpulse/
-├── .github/workflows/
-│   └── flutter_ci.yml                 # GitHub Actions CI/CD Pipeline
-│
-├── functions/                         # Firebase Cloud Functions (Node.js)
-│   ├── index.js                       # RTDB Trigger & FCM Push Handler 24/7
-│   └── package.json
-│
-├── lib/                               # Flutter Application Source
-│   ├── main.dart                      # App Entrypoint, App Check, Crashlytics Setup
-│   ├── firebase_options.dart          # Firebase Multi-platform Config
-│   │
-│   ├── models/                        # Data & AI Models
-│   │   ├── ai_evaluation_model.dart   # Model kết quả đánh giá AI
-│   │   ├── crop_preset_model.dart     # Model cấu hình cây trồng theo giai đoạn
-│   │   ├── farm_model.dart            # Model Nông trại & SensorData an toàn (tryParseDouble)
-│   │   ├── fuzzy_logic_engine.dart    # Mamdani Fuzzy Engine N=200 Native Dart
-│   │   ├── plant_preset_manager.dart  # Quản lý nạp bộ quy chuẩn nông học
-│   │   ├── user_model.dart            # Model người dùng & profile
-│   │   └── weather_model.dart         # Model dự báo thời tiết, WMO & AgriAdvisor
-│   │
-│   ├── services/                      # Service Layer
-│   │   ├── ai_api_service.dart        # Hybrid Edge-Cloud AI Service
-│   │   ├── app_check_service.dart     # Firebase App Check Security Singleton
-│   │   ├── auth_service.dart          # Firebase Authentication & Email Verification
-│   │   ├── firestore_service.dart     # Firestore CRUD (Farms, Users, FCM Tokens)
-│   │   ├── notification_service.dart  # Local Notification & FCM Receiver
-│   │   ├── rtdb_service.dart          # Realtime Database Sensor Streams & Safe Parsing
-│   │   └── weather_service.dart       # Open-Meteo Client, Cache & Geocoding
-│   │
-│   ├── screens/                       # Presentation Layer (UI)
-│   │   ├── login_screen.dart          # Đăng nhập
-│   │   ├── register_screen.dart       # Đăng ký
-│   │   ├── verify_email_screen.dart   # Xác thực email
-│   │   ├── main_tab_screen.dart       # Thanh điều hướng chính & Red Alert Banner
-│   │   ├── provision_screen.dart      # Cấu hình SoftAP ESP32
-│   │   └── tabs/
-│   │       ├── dashboard_tab.dart     # Dashboard tổng quan + WeatherCard
-│   │       ├── farms_tab.dart         # Quản lý Nông trại & gán vị trí địa lý
-│   │       ├── alerts_tab.dart        # Nhật ký & chi tiết khuyến nghị AI
-│   │       └── profile_tab.dart       # Cài đặt người dùng & tần suất cảnh báo
-│   │
-│   └── widgets/                       # Reusable Widgets
-│       ├── location_picker_dialog.dart# Modal chọn địa điểm & bộ nhớ 10 vùng gần nhất
-│       ├── plant_preset_dropdown.dart # Dropdown chọn cây trồng & giai đoạn
-│       └── weather_card.dart          # Thẻ dự báo thời tiết nông nghiệp & Semantics A11y
-│
-├── assets/
-│   └── plant_presets.txt              # Dataset quy chuẩn nông học (JSON)
-│
-└── test/                              # 6 Test Suites Toàn Diện
-    ├── fuzzy_logic_engine_test.dart   # AI Unit Test
-    ├── chaos_and_edge_cases_test.dart # Chaos & Resilience Test
-    ├── benchmark_stress_test.dart     # 20k Iterations Stress Benchmark
-    ├── weather_test.dart              # Weather & Vietnamese Search Test
-    ├── experiment_n_comparison.dart   # N Discretization Scientific Experiment
-    └── widget_test.dart               # Widget Smoke Test
-```
-
----
-
-## 9. Hướng dẫn Cài đặt & Vận hành
-
-### 9.1. Yêu cầu môi trường
-* **Flutter SDK**: `>= 3.12.0`
-* **Dart SDK**: `>= 3.0.0`
-* **Node.js**: `>= 18.x` & `firebase-tools` CLI
-* **Thiết bị**: Android (minSdk 21) / iOS (13.0+)
-
-### 9.2. Khởi chạy Ứng dụng
-```bash
-# 1. Clone repo
-git clone https://github.com/THEWAZARUDO/greenpulse.git
-cd greenpulse
-
-# 2. Cài đặt dependencies
-flutter pub get
-
-# 3. Phân tích tĩnh kiểm tra mã nguồn (0 errors, 0 warnings)
-flutter analyze
-
-# 4. Chạy toàn bộ 22 bài kiểm thử tự động
-flutter test
-
-# 5. Khởi chạy ứng dụng
-flutter run
-```
-
----
-
-## 10. Lộ trình Phát triển Tương lai
+## 8. Lộ trình Phát triển Tương lai
 
 1. **Giai đoạn 1:** Tích hợp Bluetooth Low Energy (BLE) Smart Config cài đặt WiFi cho mạch ESP32 trực tiếp từ ứng dụng.
 2. **Giai đoạn 2:** Mở rộng cảm biến đo 7 chỉ số dinh dưỡng đất NPK (Đạm, Lân, Kali), độ dẫn điện EC và độ ẩm đa tầng rễ.
@@ -335,6 +236,6 @@ flutter run
 
 ---
 
-## 11. Giấy phép (License)
+## 9. Giấy phép (License)
 
 Dự án phát hành theo giấy phép [MIT License](LICENSE).
